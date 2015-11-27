@@ -74,12 +74,8 @@ public class Human() : Player() {
         for (i in 0..humanCards.size - 1) {
             println ("(${i})  suit : ${humanCards[i].suit}   rank : ${humanCards[i].rank}")
         }
-        fun getCardNubmer() : Int {
-            val cardNumber : Int = readLine()?.toInt() ?: getCardNubmer()
-            return cardNumber
-        }
-        val firstCardNumber = getCardNubmer()
-        val secondCardNumber = getCardNubmer()
+        val firstCardNumber = Game.getArgs(humanCards.size - 1)
+        val secondCardNumber = Game.getArgs(humanCards.size - 1)
         comp1.handCards.add(comp1.handCards[firstCardNumber])
         comp2.handCards.add(comp2.handCards[secondCardNumber])
         comp1.handCards = Game.sortBySuits(comp1.handCards)
@@ -103,6 +99,15 @@ internal object Game {
     internal var talon : Array<Card> = Array(3, { Card(' ', 0) })
 
     internal var activePlayer : Player = ComputerPlayer1
+
+
+    internal fun getArgs(range : Int) : Int {
+        var args : Int = readLine()?.toInt() ?: getArgs(range)
+        if (args > range || args < 0) {
+            args = getArgs(range)
+        }
+        return args
+    }
 
     private fun leftPlayer() : Player {
         when (activePlayer) {
@@ -139,6 +144,10 @@ internal object Game {
     public fun start() {
         var shuffledCards = shuffle()
         cardsDeal(shuffledCards)
+        while (firstRetakeChecking()) {
+            shuffledCards = shuffle()
+            cardsDeal(shuffledCards)
+        }
         //проверка (14 и 9)
         //пересдача, если что
 
@@ -264,6 +273,59 @@ internal object Game {
             player.handCards.add(talon[i])
         }
         player.handCards = sortBySuits(player.handCards)
+    }
+
+    private fun reviewNines (player : Player) : Boolean {
+        var counter9 = 0
+        for (i in player.handCards) {
+            if (i.rank == 9) {
+                counter9++
+            }
+        }
+        if (counter9 == 4) {
+            return true
+        }
+        return false
+    }
+
+    private fun review14 (player : Player) : Boolean {
+        var ranksSum = 0
+        for (i in player.handCards) {
+            ranksSum += i.rank
+        }
+        if (ranksSum < 14) {return true}
+
+        return false
+    }
+
+    private fun firstRetakeChecking() : Boolean{
+        if (reviewNines(HumanPlayer)) {
+            println ("Do you want to retake the cards?\nprint:\n0 - No\n1 - Yes")
+            val answer = getArgs(1)
+            if (answer == 1) {
+                println ("Four nines")
+                return true
+            }
+        }
+        if (review14(HumanPlayer)) {
+            println ("Do you want to retake the cards?\nprint:\n0 - No\n1 - Yes")
+            val answer = getArgs(1)
+            if (answer == 1) {
+                println ("Fhe sum of points of cards < 14")
+                return true
+            }
+        }
+        if (reviewNines(ComputerPlayer1) || reviewNines(ComputerPlayer2)) {
+            println ("Four nines")
+            return true
+        }
+        if (review14(ComputerPlayer1) || review14(ComputerPlayer2)) {
+            println ("Fhe sum of points of cards < 14")
+            return true
+        }
+        return false
+        // если у компьютера есть возсожность пересдать карты - он обязательно это делает
+        // если кто то захотел пересдать - показать его карты и написать причину
     }
 }
 

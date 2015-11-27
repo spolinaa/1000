@@ -31,14 +31,14 @@ abstract private class Player() {
         return 115
     }
 
-    //abstract internal fun giveCards() : Array<Card>
+    abstract internal fun giveCards(comp1 : Player, comp2 : Player)
 
 }
 
 public class Computer() : Player() {
     override public fun click() {}
     override internal fun askObligation() : Int { return 0 } /////анализ карт на руках
-    //override internal fun giveCards() : Array<Card> { return Array<Card>(2, { Card(' ', 0)}) }
+    override internal fun giveCards(human : Player, comp : Player) {}
 }
 
 public class Human() : Player() {
@@ -47,7 +47,24 @@ public class Human() : Player() {
         obligation = maxBid()
         return maxBid()
     }
-    //override internal fun giveCards() : Array<Card> { }
+    override internal fun giveCards(comp1 : Player, comp2 : Player) {
+        var humanCards = handCards
+        for (i in 0..humanCards.size - 1) {
+            println ("(${i})  suit : ${humanCards[i].suit}   rank : ${humanCards[i].rank}")
+        }
+        fun getCardNubmer() : Int {
+            val cardNumber: Int = readLine()?.toInt() ?: getCardNubmer()
+            return cardNumber
+        }
+        val firstCardNumber = getCardNubmer()
+        val secondCardNumber = getCardNubmer()
+        comp1.handCards.add(comp1.handCards[firstCardNumber])
+        comp2.handCards.add(comp2.handCards[secondCardNumber])
+        comp1.handCards = Game.sortBySuits(comp1.handCards)
+        comp2.handCards = Game.sortBySuits(comp2.handCards)
+        handCards.removeAt(Math.max(firstCardNumber, secondCardNumber))
+        handCards.removeAt(Math.min(firstCardNumber, secondCardNumber))
+    }
 }
 
 object Game {
@@ -215,24 +232,7 @@ object Game {
         player.handCards = sortBySuits(player.handCards)
     }
 
-    private fun humanGiveCards() {
-        var humanCards = HumanPlayer.handCards
-        for (i in 0..humanCards.size - 1) {
-            println ("(${i})  suit : ${humanCards[i].suit}   rank : ${humanCards[i].rank}")
-        }
-        fun getCardNubmer() : Int {
-            val cardNumber: Int = readLine()?.toInt() ?: getCardNubmer()
-            return cardNumber
-        }
-        val firstCardNumber = getCardNubmer()
-        val secondCardNumber = getCardNubmer()
-        ComputerPlayer1.handCards.add(ComputerPlayer1.handCards[firstCardNumber])
-        ComputerPlayer2.handCards.add(ComputerPlayer2.handCards[secondCardNumber])
-        ComputerPlayer1.handCards = sortBySuits(ComputerPlayer1.handCards)
-        ComputerPlayer2.handCards = sortBySuits(ComputerPlayer2.handCards)
-        HumanPlayer.handCards.removeAt(Math.max(firstCardNumber, secondCardNumber))
-        HumanPlayer.handCards.removeAt(Math.min(firstCardNumber, secondCardNumber))
-    }
+
 
 }
 

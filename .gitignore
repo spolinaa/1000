@@ -1,4 +1,2 @@
-*gen
-*lib
-*out
-*.idea
+gen
+.idea

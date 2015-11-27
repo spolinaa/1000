@@ -10,20 +10,20 @@ abstract private class Player() {
     abstract internal fun click()
     abstract internal fun askObligation() : Int
     abstract internal fun giveCards(p1 : Player, p2 : Player)
-    internal fun haveMarriage() : Boolean {
+    internal fun haveMarriage() : Char? {
         val suits = arrayOf('s', 'c', 'd', 'h')
         for (i in suits) {
             val king  = handCards.contains(Card(i, 4))
             val queen = handCards.contains(Card(i, 3))
-            if (king && queen) { return true }
+            if (king && queen) { return i }
         }
-        return false
+        return null
     }
 
     internal fun maxBid() : Int {
         val s = readLine()?.toInt() ?: 0
-        if (s > 120 && haveMarriage()) { return s } ///120 можно, если есть хваль
-        return 120
+        if (s > 120 && haveMarriage() == null) { return 120 }
+        return s
     }
 }
 
@@ -31,6 +31,36 @@ public class Computer() : Player() {
     override internal fun click() {}
     override internal fun askObligation() : Int { return 0 } /////использовать анализ карт на руках
     override internal fun giveCards(p1 : Player, p2 : Player) {} ///////использовать анализ карт на руках
+    var goodCards : ArrayList<Card> = ArrayList()
+    var sum = 0
+    private fun firstAnalysis() {
+        val size = handCards.size
+        val additionalScore = 5
+        for (i in 0..size - 1) {
+            val suit = handCards[i].suit
+            val rank = handCards[i].rank
+            var nextRank = 0
+            val lastInGood = goodCards.size - 1
+            when (rank) {
+                11 -> { goodCards.add(handCards[i]); sum += 11 }
+                10 -> { nextRank = 11 }
+                4  -> { nextRank = 10 }
+                3  -> { nextRank = 4  }
+                2  -> { nextRank = 3  }
+                0  -> { nextRank = 2  }
+            }
+            if (goodCards[lastInGood] == Card(suit, nextRank)) {
+                goodCards.add(handCards[i])
+                sum += rank + additionalScore
+            }
+        }
+        when (haveMarriage()) {
+            's' -> { sum += 40 }
+            'c' -> { sum += 60 }
+            'd' -> { sum += 80 }
+            'h' -> { sum += 100 }
+        }
+    }
 }
 
 public class Human() : Player() {

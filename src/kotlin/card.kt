@@ -62,7 +62,7 @@ object Game {
     val HumanPlayer = Human()
     val ComputerPlayer1 = Computer()
     val ComputerPlayer2 = Computer()
-    var Talon : Array<Card> = Array(3, { Card(' ', 0) })
+    var talon : Array<Card> = Array(3, { Card(' ', 0) })
 
     var turn = 0
 
@@ -134,6 +134,8 @@ object Game {
         for (i in 14..20) {
             ComputerPlayer2.handCards[i - 14] = shuffledCards[i]
         }
+        val startCard = 21
+        talon = Array(3, {i -> shuffledCards[i + startCard]})
         HumanPlayer.handCards = sortBySuits(HumanPlayer.handCards)
         ComputerPlayer1.handCards = sortBySuits(ComputerPlayer1.handCards)
         ComputerPlayer2.handCards = sortBySuits(ComputerPlayer2.handCards)
@@ -181,6 +183,57 @@ object Game {
         }
         return sortedCards
     }
+
+    internal fun availableCards(playerCards : ArrayList<Card>, trump : Char?, firstSuit : Char)
+            : ArrayList<Card> {
+        var availabCards : ArrayList<Card> = ArrayList()
+
+        for (i in playerCards) {
+            if (i.suit == firstSuit) {
+                availabCards.add(i)
+            }
+        }
+
+        if (availabCards.size == 0 && trump != null) {
+            for (i in playerCards) {
+                if (i.suit == trump) {
+                    availabCards.add(i)
+                }
+            }
+        }
+
+        if (availabCards.size == 0) {
+            availabCards = playerCards
+        }
+        return availabCards
+    }
+
+    private fun getTalon(player : Player){
+        for (i in 0..talon.size - 1) {
+            player.handCards.add(talon[i])
+        }
+        player.handCards = sortBySuits(player.handCards)
+    }
+
+    private fun humanGiveCards() {
+        var humanCards = HumanPlayer.handCards
+        for (i in 0..humanCards.size - 1) {
+            println ("(${i})  suit : ${humanCards[i].suit}   rank : ${humanCards[i].rank}")
+        }
+        fun getCardNubmer() : Int {
+            val cardNumber: Int = readLine()?.toInt() ?: getCardNubmer()
+            return cardNumber
+        }
+        val firstCardNumber = getCardNubmer()
+        val secondCardNumber = getCardNubmer()
+        ComputerPlayer1.handCards.add(ComputerPlayer1.handCards[firstCardNumber])
+        ComputerPlayer2.handCards.add(ComputerPlayer2.handCards[secondCardNumber])
+        ComputerPlayer1.handCards = sortBySuits(ComputerPlayer1.handCards)
+        ComputerPlayer2.handCards = sortBySuits(ComputerPlayer2.handCards)
+        HumanPlayer.handCards.removeAt(Math.max(firstCardNumber, secondCardNumber))
+        HumanPlayer.handCards.removeAt(Math.min(firstCardNumber, secondCardNumber))
+    }
+
 }
 
 class Card(suit : Char, rank : Int) {

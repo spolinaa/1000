@@ -6,66 +6,110 @@ abstract private class Player() {
     internal var handCards : ArrayList<Card> = ArrayList()
     internal var obligation = 0
     internal var pass = false
+    internal var arrayOfMarriages = haveMarriage()
 
     abstract internal fun click()
-    abstract internal fun askObligation() : Int
+    abstract internal fun askObligation(bid : Int) : Int
     abstract internal fun giveCards(p1 : Player, p2 : Player)
-    internal fun haveMarriage() : Char? {
+    internal fun haveMarriage() : ArrayList<Char> {
         val suits = arrayOf('s', 'c', 'd', 'h')
+        var res : ArrayList<Char> = ArrayList()
         for (i in suits) {
             val king  = handCards.contains(Card(i, 4))
             val queen = handCards.contains(Card(i, 3))
-            if (king && queen) { return i }
+            if (king && queen) { res.add(i) }
         }
-        return null
+        return res
     }
 
+    private fun sumWithMarriage() : Int {
+        var sum = 120
+        val size = arrayOfMarriages.size
+        if (size == 0) { return sum }
+        for (i in 0..size - 1) {
+            when (arrayOfMarriages[i]) {
+                's' -> { sum += 40  }
+                'c' -> { sum += 60  }
+                'd' -> { sum += 80  }
+                'h' -> { sum += 100 }
+            }
+        }
+        return sum
+    }
     internal fun maxBid() : Int {
         val s = readLine()?.toInt() ?: 0
-        if (s > 120 && haveMarriage() == null) { return 120 }
+        val maxSum = sumWithMarriage()
+        if (s > maxSum) { return maxSum }
         return s
     }
 }
 
 public class Computer() : Player() {
     override internal fun click() {}
-    override internal fun askObligation() : Int { return 0 } /////использовать анализ карт на руках
+    override internal fun askObligation(bid : Int) : Int {
+        val step = 5
+        cardAnalysis(handCards)
+        if (sum >= bid + step) { return sum }
+        return 0
+    }
     override internal fun giveCards(p1 : Player, p2 : Player) {} ///////использовать анализ карт на руках
     var goodCards : ArrayList<Card> = ArrayList()
+    var badCards  : ArrayList<Card> = ArrayList()
     var sum = 0
-    private fun firstAnalysis() {
-        val size = handCards.size
+    private fun cardAnalysis(cards : ArrayList<Card>) {
+        val size = cards.size
         val additionalScore = 5
         for (i in 0..size - 1) {
-            val suit = handCards[i].suit
-            val rank = handCards[i].rank
+            val suit = cards[i].suit
+            val rank = cards[i].rank
             var nextRank = 0
-            val lastInGood = goodCards.size - 1
-            when (rank) {
-                11 -> { goodCards.add(handCards[i]); sum += 11 }
-                10 -> { nextRank = 11 }
-                4  -> { nextRank = 10 }
-                3  -> { nextRank = 4  }
-                2  -> { nextRank = 3  }
-                0  -> { nextRank = 2  }
+            if (rank != 11) {
+                when (rank) {
+                    10 -> { nextRank = 11 }
+                    4  -> { nextRank = 10 }
+                    3 ->  { nextRank = 4  }
+                    2 ->  { nextRank = 3  }
+                    0 ->  { nextRank = 2  }
+                }
+                val highestCard = Card(suit, nextRank)
+                if (goodCards.contains(highestCard)) {
+                    goodCards.add(handCards[i])
+                    sum += rank + additionalScore
+                }
+                else { badCards.add(handCards[i]) }
             }
-            if (goodCards[lastInGood] == Card(suit, nextRank)) {
-                goodCards.add(handCards[i])
-                sum += rank + additionalScore
-            }
+            else { goodCards.add(handCards[i]); sum += 11 + additionalScore }
         }
-        when (haveMarriage()) {
-            's' -> { sum += 40 }
-            'c' -> { sum += 60 }
-            'd' -> { sum += 80 }
+        val sizeMarriage = arrayOfMarriages.size
+        val marriageSuit = arrayOfMarriages[sizeMarriage - 1]
+        if (sizeMarriage > 0) { marriagesToUse(marriageSuit) }
+    }
+
+    private fun marriagesToUse(suit : Char) {
+        val kingRank = 4
+        var last = arrayOfMarriages.size - 1
+        val king = Card(suit, kingRank)
+        when (suit) {
+            's' -> { sum += 40  }
+            'c' -> { sum += 60  }
+            'd' -> { sum += 80  }
             'h' -> { sum += 100 }
+        }
+        if (!goodCards.contains(king)) {
+            Game.sortBySuits(goodCards)
+            val size = goodCards.size
+            goodCards.add(size, king)
+        }
+        else {
+            last--
+            if (last >= 0) { marriagesToUse(arrayOfMarriages[last]) }
         }
     }
 }
 
 public class Human() : Player() {
     override internal fun click() {}
-    override internal fun askObligation() : Int {
+    override internal fun askObligation(bid : Int) : Int {
         obligation = maxBid()
         return maxBid()
     }
@@ -98,8 +142,8 @@ internal object Game {
     internal val ComputerPlayer2 = Computer()
     internal var talon : Array<Card> = Array(3, { Card(' ', 0) })
 
-    internal var activePlayer : Player = ComputerPlayer1
-
+    internal var firstHand : Player = ComputerPlayer1
+    internal var activePlayer : Player = firstHand
 
     internal fun getArgs(range : Int) : Int {
         var args : Int = readLine()?.toInt() ?: getArgs(range)
@@ -133,7 +177,7 @@ internal object Game {
         while (count < 2) {
             activePlayer = leftPlayer()
             if (!activePlayer.pass) {
-                var newBid = activePlayer.askObligation()
+                var newBid = activePlayer.askObligation(bid)
                 if (newBid > bid) { bid = newBid }
                 else { count++; activePlayer.pass = true }
             }
@@ -141,24 +185,33 @@ internal object Game {
         }
     }
 
-    public fun start() {
-        var shuffledCards = shuffle()
-        cardsDeal(shuffledCards)
-        while (firstRetakeChecking()) {
+    private fun correctShuffle() {
+        var shuffledCards : Array<Card>
+        var res = true
+        while (res) { //если (сумма очков < 14 || четыре 9) - возможно, пересдача
             shuffledCards = shuffle()
             cardsDeal(shuffledCards)
+            res = firstRetakeChecking()
         }
-        //проверка (14 и 9)
-        //пересдача, если что
+    }
 
+    public fun start() {
+        activePlayer = firstHand
+        correctShuffle()
         bidding()
         ///анализ карт в прикупе
-        getTalon(activePlayer)
+        getTalon()
+        ///если хочет расписать - новая игра + переход хода (менять firstHand на leftPlayer)
         val opponent1 = leftPlayer()
         val opponent2 = rightPlayer()
         activePlayer.giveCards(opponent1, opponent2)
-        ////проверка (14 и 9)
-        activePlayer.click()
+        if (!firstRetakeChecking()) {
+            activePlayer.click()
+
+        }
+        else { start() }
+
+
     }
 
     private fun shuffle() : Array<Card> {
@@ -244,8 +297,8 @@ internal object Game {
         return sortedCards
     }
 
-    private fun availableCards(playerCards : ArrayList<Card>, trump : Char?, firstSuit : Char)
-            : ArrayList<Card> {
+    private fun availableCards(playerCards : ArrayList<Card>,
+                               trump : Char?, firstSuit : Char) : ArrayList<Card> {
         var availabCards : ArrayList<Card> = ArrayList()
 
         for (i in playerCards) {
@@ -268,14 +321,14 @@ internal object Game {
         return availabCards
     }
 
-    private fun getTalon(player : Player){
+    private fun getTalon() {
         for (i in 0..talon.size - 1) {
-            player.handCards.add(talon[i])
+            activePlayer.handCards.add(talon[i])
         }
-        player.handCards = sortBySuits(player.handCards)
+        activePlayer.handCards = sortBySuits(activePlayer.handCards)
     }
 
-    private fun reviewNines (player : Player) : Boolean {
+    private fun reviewNines(player : Player) : Boolean {
         var counter9 = 0
         for (i in player.handCards) {
             if (i.rank == 9) {
@@ -288,7 +341,7 @@ internal object Game {
         return false
     }
 
-    private fun review14 (player : Player) : Boolean {
+    private fun review14(player : Player) : Boolean {
         var ranksSum = 0
         for (i in player.handCards) {
             ranksSum += i.rank
@@ -320,12 +373,12 @@ internal object Game {
             return true
         }
         if (review14(ComputerPlayer1) || review14(ComputerPlayer2)) {
-            println ("Fhe sum of points of cards < 14")
+            println ("The sum of points of cards < 14")
             return true
         }
         return false
-        // если у компьютера есть возсожность пересдать карты - он обязательно это делает
-        // если кто то захотел пересдать - показать его карты и написать причину
+        // если у компьютера есть возможность пересдать карты - он обязательно это делает
+        // если кто-то захотел пересдать - показать его карты и написать причину
     }
 }
 
@@ -337,10 +390,12 @@ class Card(suit : Char, rank : Int) {
 
 
 //перемешали!; раздали (если что - пересдали); торги (проверка на наличие марьяжа!); --подсчет максимума очков,
-// открыли прикуп! (если что - пересдали и снова торги итд); раздали прикуп!
+// открыли прикуп! (если что - пересдали и снова торги итд);
+// активный игрок забирает прикуп!; согласен играть - отдает карты соперникам!; выбирает свою ставку;
+// не согласен - роспись пополам столько, сколько заявил
 //первый ход (хвалить нельзя); второй ход у того, кто взял взятку; ... - приплюсовываем очки (рисуем на экране)
 //кто-то хвалит - меняем статусы всех мастей; играем 8 ходов;
-//подсчет набранных очков; проверяем, набрал ли "торгаш" очки;
+//подсчет набранных очков; проверяем, набрал ли активный игрок очки;
 // заносим очки в таблицу (проверка на болты - хранить счетчик);
 
 //играем, пока кто-то не наберет 880 очков

@@ -1,20 +1,15 @@
+package kotlin
+
 import java.util.*
 
 abstract private class Player() {
-    //val turn = false
-    var handCards : ArrayList<Card> = ArrayList()
-    private fun addCard(c : Card) {
-        handCards.add(c)
-    }
-    private fun removeCard(c : Card) {
-        handCards.remove(c)
-    }
-    abstract public fun click()
+    internal var handCards : ArrayList<Card> = ArrayList()
+    internal var obligation = 0
+    internal var pass = false
 
-    public var obligation = 0
-
+    abstract internal fun click()
     abstract internal fun askObligation() : Int
-
+    abstract internal fun giveCards(p1 : Player, p2 : Player)
     internal fun haveMarriage() : Boolean {
         val suits = arrayOf('s', 'c', 'd', 'h')
         for (i in suits) {
@@ -27,22 +22,19 @@ abstract private class Player() {
 
     internal fun maxBid() : Int {
         val s = readLine()?.toInt() ?: 0
-        if (s >= 120 && haveMarriage()) { return s } ///120 можно, если есть хваль
-        return 115
+        if (s > 120 && haveMarriage()) { return s } ///120 можно, если есть хваль
+        return 120
     }
-
-    abstract internal fun giveCards(comp1 : Player, comp2 : Player)
-
 }
 
 public class Computer() : Player() {
-    override public fun click() {}
-    override internal fun askObligation() : Int { return 0 } /////анализ карт на руках
-    override internal fun giveCards(human : Player, comp : Player) {}
+    override internal fun click() {}
+    override internal fun askObligation() : Int { return 0 } /////использовать анализ карт на руках
+    override internal fun giveCards(p1 : Player, p2 : Player) {} ///////использовать анализ карт на руках
 }
 
 public class Human() : Player() {
-    override public fun click() {}
+    override internal fun click() {}
     override internal fun askObligation() : Int {
         obligation = maxBid()
         return maxBid()
@@ -53,7 +45,7 @@ public class Human() : Player() {
             println ("(${i})  suit : ${humanCards[i].suit}   rank : ${humanCards[i].rank}")
         }
         fun getCardNubmer() : Int {
-            val cardNumber: Int = readLine()?.toInt() ?: getCardNubmer()
+            val cardNumber : Int = readLine()?.toInt() ?: getCardNubmer()
             return cardNumber
         }
         val firstCardNumber = getCardNubmer()
@@ -67,71 +59,83 @@ public class Human() : Player() {
     }
 }
 
-object Game {
-    var currentScore = Array(3, {0})
-    var totalScore   = Array(3, {0})
-    val suits = arrayOf('s', 'c', 'd', 'h') // крести, пики, бубны, черви
-    val ranks = arrayOf(11, 10, 4, 3, 2, 0)
-    var cardArray : Array<Array<Card>> = Array(4,
-            { i -> Array<Card>(6,
-                    { j -> Card(suits[i], ranks[j]) }) })
+internal object Game {
+    private var currentScore = Array(3, {0})
+    private var totalScore   = Array(3, {0})
+    private val suits = arrayOf('s', 'c', 'd', 'h') // пики, крести, бубны, черви
+    private val ranks = arrayOf(11, 10, 4, 3, 2, 0)
+    private var cardArray : Array<Array<Card>> = Array(4,
+            { i -> Array(6, { j -> Card(suits[i], ranks[j]) }) })
 
-    val HumanPlayer = Human()
-    val ComputerPlayer1 = Computer()
-    val ComputerPlayer2 = Computer()
-    var talon : Array<Card> = Array(3, { Card(' ', 0) })
+    internal val HumanPlayer = Human()
+    internal val ComputerPlayer1 = Computer()
+    internal val ComputerPlayer2 = Computer()
+    internal var talon : Array<Card> = Array(3, { Card(' ', 0) })
 
-    var turn = 0
+    internal var activePlayer : Player = ComputerPlayer1
+
+    private fun leftPlayer() : Player {
+        when (activePlayer) {
+            HumanPlayer     -> { return ComputerPlayer1 }
+            ComputerPlayer1 -> { return ComputerPlayer2 }
+            ComputerPlayer2 -> { return HumanPlayer     }
+        }
+        return activePlayer
+    }
+
+    private fun rightPlayer() : Player {
+        when (activePlayer) {
+            HumanPlayer     -> { return ComputerPlayer2 }
+            ComputerPlayer1 -> { return HumanPlayer     }
+            ComputerPlayer2 -> { return ComputerPlayer1 }
+        }
+        return activePlayer
+    }
 
     private fun bidding() {
         var bid = 100
         var count = 0
-        while (count < 3) {
-            var newBid = bid
-            when (turn) {
-                0 -> { newBid = ComputerPlayer1.askObligation() }
-                1 -> { newBid = ComputerPlayer2.askObligation() }
-                2 -> { newBid = HumanPlayer.askObligation() }
+        while (count < 2) {
+            activePlayer = leftPlayer()
+            if (!activePlayer.pass) {
+                var newBid = activePlayer.askObligation()
+                if (newBid > bid) { bid = newBid }
+                else { count++; activePlayer.pass = true }
             }
-            if (newBid > bid) { bid = newBid }
-            else { count++ }
-            turn++ mod 3
+            activePlayer.obligation = bid
         }
-        when (turn) {
-            0 -> { HumanPlayer.obligation     = bid }
-            1 -> { ComputerPlayer1.obligation = bid }
-            2 -> { ComputerPlayer2.obligation = bid }
-        }
-        //return turn
     }
 
     public fun start() {
         var shuffledCards = shuffle()
         cardsDeal(shuffledCards)
+        //проверка (14 и 9)
+        //пересдача, если что
+
         bidding()
-        //getTalon()
-        //getCards()
-        when (turn) {
-            0 -> HumanPlayer.click()
-            1 -> ComputerPlayer1.click()
-            2 -> ComputerPlayer2.click()
-        }
+        ///анализ карт в прикупе
+        getTalon(activePlayer)
+        val opponent1 = leftPlayer()
+        val opponent2 = rightPlayer()
+        activePlayer.giveCards(opponent1, opponent2)
+        ////проверка (14 и 9)
+        activePlayer.click()
     }
 
-    private fun shuffle(): Array<Card> {
-        var shuffledCards: Array<Card> = Array(24, { Card(' ', 0) })
+    private fun shuffle() : Array<Card> {
+        var shuffledCards : Array<Card> = Array(24, { Card(' ', 0) })
         for (i in 0..suits.size - 1) {
             for (j in 0..ranks.size - 1) {
                 shuffledCards[i * 6 + j] = cardArray[i][j]
             }
         }
         val size = shuffledCards.size - 1
-        var card: Card
-        var residue: ArrayList<Card> = arrayListOf()
+        var card : Card
+        var residue : ArrayList<Card> = arrayListOf()
         for (i in 0..shuffledCards.size - 1) {
             residue.add(i, shuffledCards[i])
         }
-        var random: Int
+        var random : Int
         for (i in 0..size) {
             random = Random().nextInt(residue.size)
             card = residue[random]
@@ -141,7 +145,7 @@ object Game {
         return shuffledCards
     }
 
-    private fun cardsDeal(shuffledCards: Array<Card>) {
+    private fun cardsDeal(shuffledCards : Array<Card>) {
         for (i in 0..6) {
             HumanPlayer.handCards[i] = shuffledCards[i]
         }
@@ -158,11 +162,11 @@ object Game {
         ComputerPlayer2.handCards = sortBySuits(ComputerPlayer2.handCards)
     }
 
-    internal fun sortBySuits(handC: ArrayList<Card>): ArrayList<Card> {
-        var spades: ArrayList<Card> = ArrayList()
-        var clubs: ArrayList<Card> = ArrayList()
-        var diamonds: ArrayList<Card> = ArrayList()
-        var hearts: ArrayList<Card> = ArrayList()
+    internal fun sortBySuits(handC : ArrayList<Card>) : ArrayList<Card> {
+        var spades   : ArrayList<Card> = ArrayList()
+        var clubs    : ArrayList<Card> = ArrayList()
+        var diamonds : ArrayList<Card> = ArrayList()
+        var hearts   : ArrayList<Card> = ArrayList()
 
         for (i in 0..handC.size - 1) {
             when (handC[i].suit) {
@@ -188,8 +192,8 @@ object Game {
         return spades
     }
 
-    internal fun sortByRanks(suitCards: ArrayList<Card>): ArrayList<Card> {
-        var sortedCards: ArrayList<Card> = ArrayList()
+    private fun sortByRanks(suitCards : ArrayList<Card>) : ArrayList<Card> {
+        var sortedCards : ArrayList<Card> = ArrayList()
         for (j in ranks) {
             for (i in suitCards) {
                 if (i.rank == j) {
@@ -201,7 +205,7 @@ object Game {
         return sortedCards
     }
 
-    internal fun availableCards(playerCards : ArrayList<Card>, trump : Char?, firstSuit : Char)
+    private fun availableCards(playerCards : ArrayList<Card>, trump : Char?, firstSuit : Char)
             : ArrayList<Card> {
         var availabCards : ArrayList<Card> = ArrayList()
 
@@ -231,9 +235,6 @@ object Game {
         }
         player.handCards = sortBySuits(player.handCards)
     }
-
-
-
 }
 
 class Card(suit : Char, rank : Int) {
@@ -244,7 +245,7 @@ class Card(suit : Char, rank : Int) {
 
 
 //перемешали!; раздали (если что - пересдали); торги (проверка на наличие марьяжа!); --подсчет максимума очков,
-// открыли прикуп (если что - пересдали и снова торги итд); раздали прикуп
+// открыли прикуп! (если что - пересдали и снова торги итд); раздали прикуп!
 //первый ход (хвалить нельзя); второй ход у того, кто взял взятку; ... - приплюсовываем очки (рисуем на экране)
 //кто-то хвалит - меняем статусы всех мастей; играем 8 ходов;
 //подсчет набранных очков; проверяем, набрал ли "торгаш" очки;

@@ -9,15 +9,21 @@ abstract internal class Player() {
     internal var arrayOfMarriages = haveMarriage()
     internal var totalScore   = 0
     internal var currentScore = 0
+    internal var onBarrel = false
+    internal var barrelBolts = 0
+    internal var bolts = 0 ///не прибавлять ничего, если игрок на бочке
+    internal var climbDownFromBarrel = 0
 
-    abstract internal fun finalObligation() : Int
-    abstract internal fun activeClick() : Card ///менять activeSuit
-    abstract internal fun passiveClick() : Card
-    abstract protected fun askPlayerToRaise(nextBid : Int) : Int
     abstract internal var firstCardNumber : Int
     abstract internal var secondCardNumber : Int
-    abstract protected fun chooseCardsToGive()
+
+    abstract internal fun finalObligation() : Int
+    abstract internal fun activeClick() : Card
+    abstract internal fun passiveClick() : Card
     abstract internal fun askPointsDivision() : Boolean
+
+    abstract protected fun askPlayerToRaise(nextBid : Int) : Int
+    abstract protected fun chooseCardsToGive()
 
     internal fun askObligation(bid : Int) : Int {
         val maxSum = sumWithMarriage()
@@ -54,7 +60,7 @@ abstract internal class Player() {
         handCards.removeAt(Math.min(firstCardNumber, secondCardNumber))
     }
 
-    internal fun haveMarriage() : ArrayList<Char> {
+    protected fun haveMarriage() : ArrayList<Char> {
         val suits = arrayOf('s', 'c', 'd', 'h')
         var res : ArrayList<Char> = ArrayList()
         for (i in suits) {
@@ -85,11 +91,6 @@ abstract internal class Player() {
         return availabCards
     }
 
-    internal var onBarrel = false
-    internal var barrelBolts = 0
-    internal var bolts = 0 ///не прибавлять ничего, если игрок на бочке
-    internal var climbDownFromBarrel = 0
-
     internal fun imposeFines() {
         var fine = 120
         when (totalScore) {
@@ -99,7 +100,4 @@ abstract internal class Player() {
         if (barrelBolts == 3) { barrelBolts = 0; totalScore -= fine }
         if (climbDownFromBarrel == 3) { climbDownFromBarrel = 0; totalScore -= fine }
     }
-
-
-
 }

@@ -3,7 +3,6 @@ package kotlin
 import java.util.*
 
 public class Human() : Player() {
-
     internal fun humanInput() : Boolean {
         val s = readLine() ?: ""
         if (s == "Д") { return true }
@@ -15,6 +14,7 @@ public class Human() : Player() {
         Game.activeSuit = card.suit
         return card
     }
+
     override internal fun passiveClick() : Card = click()
 
     private fun click() : Card {

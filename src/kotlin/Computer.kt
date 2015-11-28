@@ -58,8 +58,8 @@ public class Computer() : Player() {
     override internal var firstCardNumber = 0
     override internal var secondCardNumber = 1
 
-    private var goodCards : ArrayList<Card> = ArrayList()
-    private var badCards  : ArrayList<Card> = ArrayList()
+    private var goodCards : ArrayList<Card> = ArrayList() //карты, которыми можно взять взятку
+    private var badCards  : ArrayList<Card> = ArrayList() //карты, которыми нельзя взять взятку
     private var sum = 0
 
     private fun cardAnalysis(cards : ArrayList<Card>) : Int {
@@ -125,16 +125,17 @@ public class Computer() : Player() {
         var card : Card
         if (goodSize > 0) {
             card = goodCards[0]
-            goodCards.removeAt(0)
+            goodCards.remove(card)
         }
         else {
             val badSize = badCards.size
             if (badSize > 0) {
-                card = badCards[0]  ///тут надо выбирать лучшую карту для хода *
-                badCards.removeAt(0)
+                findLowCards(1, badCards)
+                card = badCards[secondCardNumber]  ///взятку не взять, поэтому ходить самой маленькой
+                badCards.remove(card)
             }
             else {
-                card = handCards[0] ///тут надо выбирать лучшую карту для хода *
+                card = handCards[0] //тут могут быть только дамы из захваленных пар, но взятку ими не взять
             }
         }
         handCards.remove(card)
@@ -154,16 +155,16 @@ public class Computer() : Player() {
         val badSize = badCards.size
         val availableCards = availableCards()
         val availableSize = availableCards.size
-        var i = 0
+        var availableBadCards : ArrayList<Card> = ArrayList()
         if (badSize > 0) {
-            while (!badCards.contains(availableCards[i]) && i < availableSize)  {
-                i++
+            for (i in 0..availableSize - 1) { //выбор самой маленькой из доступных badCards
+                val card = availableCards[i]
+                if (badCards.contains(availableCards[i])) { availableBadCards.add(card) }
             }
-            if (i < availableSize || badCards.contains(availableCards[i])) {
-                return removeCard(availableCards[i], badCards)
-            }
+            findLowCards(1, availableBadCards)
+            return removeCard(handCards[secondCardNumber], badCards)
         }
-        findLowCards(1, availableCards)
+        findLowCards(1, availableCards) //если badCards нет, тогда отдаем самую маленькую из handCards
         return removeCard(handCards[secondCardNumber], availableCards)
     }
 
@@ -213,7 +214,4 @@ public class Computer() : Player() {
         return false
     }
 
- }
-
-//пока что стратегии игры на низком уровне (где-то на уровне чайника)
-//подсчет выпавших карт
+}

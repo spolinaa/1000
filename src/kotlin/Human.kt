@@ -23,6 +23,7 @@ public class Human() : Player() {
         val s = readLine()?.toInt() ?: 0
         val card = handCards[s]
         handCards.removeAt(s)
+        Computer().inaccessibleCards.add(card)
         return card
     }
 

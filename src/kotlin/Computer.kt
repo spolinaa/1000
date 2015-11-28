@@ -119,13 +119,13 @@ public class Computer() : Player() {
         }
     }
 
-    private fun activeStrategy() : Card {  /// *учитывать подсчет выпавших карт
+    private fun activeStrategy() : Card {
+        inaccessibleCardsAnalysis()
         val goodSize = goodCards.size
         var card : Card
         if (goodSize > 0) {
             card = goodCards[0]
             goodCards.removeAt(0)
-
         }
         else {
             val badSize = badCards.size
@@ -138,17 +138,20 @@ public class Computer() : Player() {
             }
         }
         handCards.remove(card)
+        inaccessibleCards.add(card)
         return card
     }
 
     private fun removeCard(card : Card, array : ArrayList<Card>) : Card {
         array.remove(card)
         handCards.remove(card)
+        inaccessibleCards.add(card)
         return card
     }
 
-    private fun passiveStrategy() : Card { ///*учитывать подсчет выпавших карт
-        val badSize = badCards.size                        ///*после каждого хода активного добавлять карты в goodCards (удалять из badCards), если возможно
+    private fun passiveStrategy() : Card {
+        inaccessibleCardsAnalysis()
+        val badSize = badCards.size
         val availableCards = availableCards()
         val availableSize = availableCards.size
         var i = 0
@@ -163,4 +166,54 @@ public class Computer() : Player() {
         findLowCards(1, availableCards)
         return removeCard(handCards[secondCardNumber], availableCards)
     }
-}
+
+    internal var inaccessibleCards : ArrayList<Card> = ArrayList()
+
+    private fun inaccessibleCardsAnalysis() {
+        inaccessibleCards = Game.sortBySuits(inaccessibleCards)
+        val size = inaccessibleCards.size
+        var pointArray = Array(4, { 0 })
+        var index = 0
+        for (i in 0..size - 1) {
+            index = suitIndex(inaccessibleCards[i].suit)
+            pointArray[index] += inaccessibleCards[i].rank
+        }
+        val handSize = handCards.size
+        for (i in 0..handSize - 1) {
+            val card = handCards[i]
+            if (!goodCards.contains(card)) {
+                index = suitIndex(handCards[i].suit)
+                if (hasPreviousCards(pointArray[index], card.rank)) {
+                    if (badCards.contains(card)) { badCards.remove(card) }
+                    goodCards.add(card)
+                }
+            }
+        }
+        goodCards = Game.sortBySuits(goodCards)
+    }
+
+    private fun suitIndex(suit : Char) : Int {
+        when (suit) {
+            's' -> { return 0 }
+            'c' -> { return 1 }
+            'd' -> { return 2 }
+            'h' -> { return 3 }
+        }
+        return 0
+    }
+
+    private fun hasPreviousCards(sum : Int, rank : Int) : Boolean {
+        when (rank) {
+            10 -> { return (sum == 11) }
+            4  -> { return (sum == 21) }
+            3  -> { return (sum == 25) }
+            2  -> { return (sum == 28) }
+            0  -> { return (sum == 30) }
+        }
+        return false
+    }
+
+ }
+
+//пока что стратегии игры на низком уровне (где-то на уровне чайника)
+//подсчет выпавших карт

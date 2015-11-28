@@ -78,6 +78,7 @@ internal object Game {
         rightPlayer().currentScore = 0
         activePlayer.firstCardNumber = 0
         activePlayer.secondCardNumber = 1
+        Computer().inaccessibleCards = ArrayList()
     }
 
     public fun start() {
@@ -249,6 +250,9 @@ internal object Game {
         // если у компьютера есть возможность пересдать карты - он обязательно это делает
         // если кто-то захотел пересдать - показать его карты и написать причину
     }
+
+
+
 }
 
 

@@ -11,11 +11,12 @@ abstract internal class Player() {
     internal var currentScore = 0
 
     abstract internal fun finalObligation() : Int
-    abstract internal fun click()
+    abstract internal fun activeClick() : Card ///менять activeSuit
+    abstract internal fun passiveClick() : Card
     abstract protected fun askPlayerToRaise(nextBid : Int) : Int
-    abstract protected var firstCardNumber : Int
-    abstract protected var secondCardNumber : Int
-    abstract protected fun chooseCards()
+    abstract internal var firstCardNumber : Int
+    abstract internal var secondCardNumber : Int
+    abstract protected fun chooseCardsToGive()
     abstract internal fun askPointsDivision() : Boolean
 
     internal fun askObligation(bid : Int) : Int {
@@ -44,7 +45,7 @@ abstract internal class Player() {
     }
 
     internal fun giveCards(p1 : Player, p2 : Player) {
-        chooseCards()
+        chooseCardsToGive()
         p1.handCards.add(p1.handCards[firstCardNumber])
         p2.handCards.add(p2.handCards[secondCardNumber])
         p1.handCards = Game.sortBySuits(p1.handCards)
@@ -62,6 +63,26 @@ abstract internal class Player() {
             if (king && queen) { res.add(i) }
         }
         return res
+    }
+
+    protected fun availableCards() : ArrayList<Card> {
+        var availabCards : ArrayList<Card> = ArrayList()
+        for (i in handCards) {
+            if (i.suit == Game.activeSuit) {
+                availabCards.add(i)
+            }
+        }
+        if (availabCards.size == 0 && Game.trump != null) {
+            for (i in handCards) {
+                if (i.suit == Game.trump) {
+                    availabCards.add(i)
+                }
+            }
+        }
+        if (availabCards.size == 0) {
+            availabCards = handCards
+        }
+        return availabCards
     }
 
     internal var onBarrel = false

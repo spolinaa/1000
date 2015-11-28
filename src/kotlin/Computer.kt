@@ -3,7 +3,15 @@ package kotlin
 import java.util.*
 
 public class Computer() : Player() {
-    override internal fun click() {}
+
+    override internal fun activeClick() : Card {
+        val card = activeStrategy()
+        Game.activeSuit = card.suit
+        return card
+    }
+
+    override internal fun passiveClick() : Card = passiveStrategy()
+
     override internal fun askPointsDivision() : Boolean {
         if (sum < obligation) { return true }
         return false
@@ -17,14 +25,14 @@ public class Computer() : Player() {
 
     override internal fun finalObligation() : Int = sum
 
-    private fun findLowCards(n : Int) {
-        val size = goodCards.size
+    private fun findLowCards(n : Int, array : ArrayList<Card>) {
+        val size = array.size
         var resArray = arrayOf(0, 1)
-        for (i in 2..size - 1) {
-            val currentCardRank = goodCards[i].rank
-            val resCardRank1 = goodCards[0].rank
-            val resCardRank2 = goodCards[1].rank
-            val currentCardIndex = handCards.indexOf(goodCards[i])
+        for (i in 0..size - 1) {
+            val currentCardRank = array[i].rank
+            val resCardRank1 = array[0].rank
+            val resCardRank2 = array[1].rank
+            val currentCardIndex = handCards.indexOf(array[i])
             if (resCardRank1 > currentCardRank) { resArray[0] = currentCardIndex }
             else if (resCardRank2 > currentCardRank) { resArray[1] = currentCardIndex }
         }
@@ -32,7 +40,7 @@ public class Computer() : Player() {
         if (n > 1) { firstCardNumber = resArray[1] }
     }
 
-    override protected fun chooseCards() {
+    override protected fun chooseCardsToGive() {
         val sizeBad = badCards.size
         when (sizeBad) {
             2 -> {
@@ -41,18 +49,18 @@ public class Computer() : Player() {
             }
             1 -> {
                 firstCardNumber = handCards.indexOf(badCards[0])
-                findLowCards(1)
+                findLowCards(1, goodCards)
             }
-            0 -> { findLowCards(2) }
+            0 -> { findLowCards(2, goodCards) }
         }
     }
 
-    override protected var firstCardNumber = 0
-    override protected var secondCardNumber = 1
+    override internal var firstCardNumber = 0
+    override internal var secondCardNumber = 1
 
-    var goodCards : ArrayList<Card> = ArrayList()
-    var badCards  : ArrayList<Card> = ArrayList()
-    var sum = 0
+    private var goodCards : ArrayList<Card> = ArrayList()
+    private var badCards  : ArrayList<Card> = ArrayList()
+    private var sum = 0
 
     private fun cardAnalysis(cards : ArrayList<Card>) : Int {
         var sum = 0
@@ -109,5 +117,50 @@ public class Computer() : Player() {
             last--
             if (last >= 0) { marriagesToUse(arrayOfMarriages[last]) }
         }
+    }
+
+    private fun activeStrategy() : Card {  /// *учитывать подсчет выпавших карт
+        val goodSize = goodCards.size
+        var card : Card
+        if (goodSize > 0) {
+            card = goodCards[0]
+            goodCards.removeAt(0)
+
+        }
+        else {
+            val badSize = badCards.size
+            if (badSize > 0) {
+                card = badCards[0]  ///тут надо выбирать лучшую карту для хода *
+                badCards.removeAt(0)
+            }
+            else {
+                card = handCards[0] ///тут надо выбирать лучшую карту для хода *
+            }
+        }
+        handCards.remove(card)
+        return card
+    }
+
+    private fun removeCard(card : Card, array : ArrayList<Card>) : Card {
+        array.remove(card)
+        handCards.remove(card)
+        return card
+    }
+
+    private fun passiveStrategy() : Card { ///*учитывать подсчет выпавших карт
+        val badSize = badCards.size                        ///*после каждого хода активного добавлять карты в goodCards (удалять из badCards), если возможно
+        val availableCards = availableCards()
+        val availableSize = availableCards.size
+        var i = 0
+        if (badSize > 0) {
+            while (!badCards.contains(availableCards[i]) && i < availableSize)  {
+                i++
+            }
+            if (i < availableSize || badCards.contains(availableCards[i])) {
+                return removeCard(availableCards[i], badCards)
+            }
+        }
+        findLowCards(1, availableCards)
+        return removeCard(handCards[secondCardNumber], availableCards)
     }
 }

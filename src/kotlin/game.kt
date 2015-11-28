@@ -15,14 +15,8 @@ internal object Game {
 
     internal var firstHand : Player = ComputerPlayer1
     internal var activePlayer : Player = firstHand
-
-    internal fun getArgs(range : Int) : Int {
-        var args : Int = readLine()?.toInt() ?: getArgs(range)
-        if (args > range || args < 0) {
-            args = getArgs(range)
-        }
-        return args
-    }
+    internal var trump : Char? = null
+    internal var activeSuit = ' '
 
     private fun leftPlayer() : Player {
         when (activePlayer) {
@@ -77,12 +71,18 @@ internal object Game {
         return false
     }
 
-    public fun start() {
-        //обнуление текущего счета
+    private fun clearAll() {
         activePlayer.obligation = 0
         activePlayer.currentScore  = 0
         leftPlayer().currentScore  = 0
         rightPlayer().currentScore = 0
+        activePlayer.firstCardNumber = 0
+        activePlayer.secondCardNumber = 1
+    }
+
+    public fun start() {
+        //обнуление текущего счета
+        clearAll()
         //переход хода по часовой стрелке
         activePlayer = firstHand
         //раздача карт
@@ -104,8 +104,9 @@ internal object Game {
             activePlayer.giveCards(opponent1, opponent2)
             activePlayer.obligation = activePlayer.finalObligation()
             if (!firstRetakeChecking()) {
-                activePlayer.click()
-
+                activePlayer.activeClick()
+                opponent1.passiveClick()
+                opponent2.passiveClick()
             } else {
                 start()
             }
@@ -195,29 +196,7 @@ internal object Game {
         return sortedCards
     }
 
-    private fun availableCards(playerCards : ArrayList<Card>,
-                               trump : Char?, firstSuit : Char) : ArrayList<Card> {
-        var availabCards : ArrayList<Card> = ArrayList()
 
-        for (i in playerCards) {
-            if (i.suit == firstSuit) {
-                availabCards.add(i)
-            }
-        }
-
-        if (availabCards.size == 0 && trump != null) {
-            for (i in playerCards) {
-                if (i.suit == trump) {
-                    availabCards.add(i)
-                }
-            }
-        }
-
-        if (availabCards.size == 0) {
-            availabCards = playerCards
-        }
-        return availabCards
-    }
 
     private fun getTalon() {
         for (i in 0..talon.size - 1) {
@@ -249,29 +228,21 @@ internal object Game {
         return false
     }
 
-    private fun firstRetakeChecking() : Boolean{
+    private fun firstRetakeChecking() : Boolean {
         if (reviewNines(HumanPlayer)) {
-            println ("Do you want to retake the cards?\nprint:\n0 - No\n1 - Yes")
-            val answer = getArgs(1)
-            if (answer == 1) {
-                println ("Four nines")
-                return true
-            }
+            println ("У вас на руках четыре девятки. Хотите пересдать карты? Д/Н")
+            return HumanPlayer.humanInput()
         }
         if (review14(HumanPlayer)) {
-            println ("Do you want to retake the cards?\nprint:\n0 - No\n1 - Yes")
-            val answer = getArgs(1)
-            if (answer == 1) {
-                println ("Fhe sum of points of cards < 14")
-                return true
-            }
+            println ("Сумма карт на руках меньше 14. Хотите пересдать карты? Д/Н")
+            return HumanPlayer.humanInput()
         }
         if (reviewNines(ComputerPlayer1) || reviewNines(ComputerPlayer2)) {
-            println ("Four nines")
+            println ("У меня на руках четыре девятки")
             return true
         }
         if (review14(ComputerPlayer1) || review14(ComputerPlayer2)) {
-            println ("The sum of points of cards < 14")
+            println ("У меня на руках сумма карт меньше 14")
             return true
         }
         return false
@@ -299,7 +270,7 @@ internal object Game {
 //играем, пока кто-то не наберет 880 очков
 //игра на бочке
 
-//если игрок становится активным на бочке и набирет 120 очков - победа
+//если игрок становится активным на бочке и набирает 120 очков - победа
 //в остальных случаях ему записывается болт
 
 //Если игрок в сумме набирает 880 очков, он «садится на бочку».

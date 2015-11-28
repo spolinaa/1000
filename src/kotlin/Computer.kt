@@ -8,11 +8,11 @@ public class Computer() : Player() {
         if (sum < obligation) { return true }
         return false
     }
-    override internal fun askObligation(bid : Int) : Int {
-        val step = 5
+
+    override protected fun askPlayerToRaise(nextBid : Int) : Int {
         sum = cardAnalysis(handCards)
-        if (sum >= bid + step) { return sum }
-        return 0
+        if (sum < nextBid) { return 0 }
+        return sum
     }
 
     override internal fun finalObligation() : Int = sum

@@ -11,34 +11,17 @@ public class Human() : Player() {
         return false
     }
 
-    override internal fun askObligation(bid : Int) : Int {
-        obligation = maxBid()
-        return maxBid()
+    override protected fun askPlayerToRaise(nextBid : Int) : Int {
+        println("${nextBid}? Д/Н")
+        val s = readLine() ?: ""
+        if (s != "Д") { return 0 }
+        return nextBid
     }
 
     override internal fun finalObligation() : Int {
-        arrayOfMarriages = haveMarriage()
-        if (maxBid() < obligation) { return obligation }
-        return maxBid()
-    }
-
-    private fun sumWithMarriage() : Int {
-        var sum = 120
-        val size = arrayOfMarriages.size
-        if (size == 0) { return sum }
-        for (i in 0..size - 1) {
-            when (arrayOfMarriages[i]) {
-                's' -> { sum += 40  }
-                'c' -> { sum += 60  }
-                'd' -> { sum += 80  }
-                'h' -> { sum += 100 }
-            }
-        }
-        return sum
-    }
-
-    private fun maxBid() : Int {
+        println("Выберите ставку")
         val s = readLine()?.toInt() ?: 0
+        if (s < obligation) { return obligation }
         val maxSum = sumWithMarriage()
         if (s > maxSum) { return maxSum }
         return s

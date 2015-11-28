@@ -12,11 +12,36 @@ abstract internal class Player() {
 
     abstract internal fun finalObligation() : Int
     abstract internal fun click()
-    abstract internal fun askObligation(bid : Int) : Int
+    abstract protected fun askPlayerToRaise(nextBid : Int) : Int
     abstract protected var firstCardNumber : Int
     abstract protected var secondCardNumber : Int
     abstract protected fun chooseCards()
     abstract internal fun askPointsDivision() : Boolean
+
+    internal fun askObligation(bid : Int) : Int {
+        val maxSum = sumWithMarriage()
+        val step = 5
+        val nextBid = bid + step
+        if (maxSum < nextBid) { return 0 }
+        if (askPlayerToRaise(nextBid) == 0) { return 0 }
+        obligation = nextBid
+        return nextBid
+    }
+
+    protected fun sumWithMarriage() : Int {
+        var sum = 120
+        val size = arrayOfMarriages.size
+        if (size == 0) { return sum }
+        for (i in 0..size - 1) {
+            when (arrayOfMarriages[i]) {
+                's' -> { sum += 40  }
+                'c' -> { sum += 60  }
+                'd' -> { sum += 80  }
+                'h' -> { sum += 100 }
+            }
+        }
+        return sum
+    }
 
     internal fun giveCards(p1 : Player, p2 : Player) {
         chooseCards()

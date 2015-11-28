@@ -64,6 +64,20 @@ abstract internal class Player() {
         return res
     }
 
+    internal var onBarrel = false
+    internal var barrelBolts = 0
+    internal var bolts = 0 ///не прибавлять ничего, если игрок на бочке
+    internal var climbDownFromBarrel = 0
+
+    internal fun imposeFines() {
+        var fine = 120
+        when (totalScore) {
+            555, -555 -> { totalScore = 0 }
+        }
+        if (bolts == 3) { bolts = 0; totalScore -= fine }
+        if (barrelBolts == 3) { barrelBolts = 0; totalScore -= fine }
+        if (climbDownFromBarrel == 3) { climbDownFromBarrel = 0; totalScore -= fine }
+    }
 
 
 

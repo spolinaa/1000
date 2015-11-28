@@ -4,13 +4,18 @@ import java.util.*
 
 public class Computer() : Player() {
     override internal fun click() {}
-
+    override internal fun askPointsDivision() : Boolean {
+        if (sum < obligation) { return true }
+        return false
+    }
     override internal fun askObligation(bid : Int) : Int {
         val step = 5
         sum = cardAnalysis(handCards)
         if (sum >= bid + step) { return sum }
         return 0
     }
+
+    override internal fun finalObligation() : Int = sum
 
     private fun findLowCards(n : Int) {
         val size = goodCards.size
@@ -26,7 +31,6 @@ public class Computer() : Player() {
         secondCardNumber = resArray[0]
         if (n > 1) { firstCardNumber = resArray[1] }
     }
-
 
     override protected fun chooseCards() {
         val sizeBad = badCards.size

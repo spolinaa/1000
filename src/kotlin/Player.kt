@@ -7,12 +7,17 @@ abstract internal class Player() {
     internal var obligation = 0
     internal var pass = false
     internal var arrayOfMarriages = haveMarriage()
+    internal var totalScore   = 0
+    internal var currentScore = 0
 
+    abstract internal fun finalObligation() : Int
     abstract internal fun click()
     abstract internal fun askObligation(bid : Int) : Int
     abstract protected var firstCardNumber : Int
     abstract protected var secondCardNumber : Int
     abstract protected fun chooseCards()
+    abstract internal fun askPointsDivision() : Boolean
+
     internal fun giveCards(p1 : Player, p2 : Player) {
         chooseCards()
         p1.handCards.add(p1.handCards[firstCardNumber])
@@ -34,25 +39,7 @@ abstract internal class Player() {
         return res
     }
 
-    private fun sumWithMarriage() : Int {
-        var sum = 120
-        val size = arrayOfMarriages.size
-        if (size == 0) { return sum }
-        for (i in 0..size - 1) {
-            when (arrayOfMarriages[i]) {
-                's' -> { sum += 40  }
-                'c' -> { sum += 60  }
-                'd' -> { sum += 80  }
-                'h' -> { sum += 100 }
-            }
-        }
-        return sum
-    }
 
-    internal fun maxBid() : Int {
-        val s = readLine()?.toInt() ?: 0
-        val maxSum = sumWithMarriage()
-        if (s > maxSum) { return maxSum }
-        return s
-    }
+
+
 }

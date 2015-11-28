@@ -3,8 +3,6 @@ package kotlin
 import java.util.*
 
 internal object Game {
-    private var currentScore = Array(3, {0})
-    private var totalScore   = Array(3, {0})
     private val suits = arrayOf('s', 'c', 'd', 'h') // пики, крести, бубны, черви
     private val ranks = arrayOf(11, 10, 4, 3, 2, 0)
     private var cardArray : Array<Array<Card>> = Array(4,
@@ -68,21 +66,50 @@ internal object Game {
         }
     }
 
+    private fun pointsDivision() : Boolean {
+        val points = 60
+        if (activePlayer.askPointsDivision()) {
+            leftPlayer().totalScore  += points
+            rightPlayer().totalScore += points
+            activePlayer.totalScore  -= activePlayer.obligation
+            return true
+        }
+        return false
+    }
+
     public fun start() {
+        //обнуление текущего счета
+        activePlayer.obligation = 0
+        activePlayer.currentScore  = 0
+        leftPlayer().currentScore  = 0
+        rightPlayer().currentScore = 0
+        //переход хода по часовой стрелке
         activePlayer = firstHand
+        //раздача карт
         correctShuffle()
+        //торговля
         bidding()
         ///анализ карт в прикупе
-        getTalon()
-        ///если хочет расписать - новая игра + переход хода (менять firstHand на leftPlayer)
-        val opponent1 = leftPlayer()
-        val opponent2 = rightPlayer()
-        activePlayer.giveCards(opponent1, opponent2)
-        if (!firstRetakeChecking()) {
-            activePlayer.click()
 
+        //первый игрок получает прикуп
+        getTalon()
+        //роспись карт
+        if (pointsDivision()) { ///кнопка "расписать" активна до тех пор, пока активный не нажмет "играть"
+            firstHand = leftPlayer() //с кнопками условий не будет - будет ожидание нажатия + активность кнопки
+            start()
         }
-        else { start() }
+        else {
+            val opponent1 = leftPlayer()
+            val opponent2 = rightPlayer()
+            activePlayer.giveCards(opponent1, opponent2)
+            activePlayer.obligation = activePlayer.finalObligation()
+            if (!firstRetakeChecking()) {
+                activePlayer.click()
+
+            } else {
+                start()
+            }
+        }
     }
 
     private fun shuffle() : Array<Card> {
@@ -256,10 +283,10 @@ internal object Game {
 
 
 
-//перемешали!; раздали (если что - пересдали); торги (проверка на наличие марьяжа!); --подсчет максимума очков,
-// открыли прикуп! (если что - пересдали и снова торги итд);
-// активный игрок забирает прикуп!; согласен играть - отдает карты соперникам!; выбирает свою ставку;
-// не согласен - роспись пополам столько, сколько заявил
+//перемешали!; раздали! (если что - пересдали!); торги (проверка на наличие марьяжа!);
+// открыли прикуп! (если что - пересдали и снова торги итд!);
+// активный игрок забирает прикуп!; согласен играть - отдает карты соперникам!; выбирает свою ставку!;
+
 //первый ход (хвалить нельзя); второй ход у того, кто взял взятку; ... - приплюсовываем очки (рисуем на экране)
 //кто-то хвалит - меняем статусы всех мастей; играем 8 ходов;
 //подсчет набранных очков; проверяем, набрал ли активный игрок очки;

@@ -19,10 +19,11 @@ public class Human() : Player() {
 
     private fun click() : Card {
         println("Введите номер карты")
-        printCards(availableCards())
+        val availableCards = availableCards()
+        printCards(availableCards)
         val s = readLine()?.toInt() ?: 0
-        val card = handCards[s]
-        handCards.removeAt(s)
+        val card = availableCards[s]
+        handCards.remove(card)
         Computer().inaccessibleCards.add(card)
         return card
     }
@@ -49,6 +50,8 @@ public class Human() : Player() {
 
     override protected fun chooseCardsToGive() {
         printCards(handCards)
+        firstCardNumber  = getArgs(handCards.size - 1)
+        secondCardNumber = getArgs(handCards.size - 1)
     }
 
     private fun printCards(cards : ArrayList<Card>) {
@@ -65,6 +68,5 @@ public class Human() : Player() {
         return args
     }
 
-    override internal var firstCardNumber  = getArgs(handCards.size - 1)
-    override internal var secondCardNumber = getArgs(handCards.size - 1)
+
 }

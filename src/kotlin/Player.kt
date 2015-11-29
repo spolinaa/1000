@@ -14,8 +14,8 @@ abstract internal class Player() {
     internal var bolts = 0 ///не прибавлять ничего, если игрок на бочке
     internal var climbDownFromBarrel = 0
 
-    abstract internal var firstCardNumber : Int
-    abstract internal var secondCardNumber : Int
+    internal var firstCardNumber  = 0
+    internal var secondCardNumber = 1
 
     abstract internal fun finalObligation() : Int
     abstract internal fun activeClick() : Card

@@ -55,9 +55,6 @@ public class Computer() : Player() {
         }
     }
 
-    override internal var firstCardNumber = 0
-    override internal var secondCardNumber = 1
-
     private var goodCards : ArrayList<Card> = ArrayList() //карты, которыми можно взять взятку
     private var badCards  : ArrayList<Card> = ArrayList() //карты, которыми нельзя взять взятку
     private var sum = 0

@@ -47,17 +47,26 @@ public class Human() : Player() {
         if (s > maxSum) { return maxSum }
         return s
     }
-
+    //♦️♥️♣️♠️
     override protected fun chooseCardsToGive() {
         printCards(handCards)
         firstCardNumber  = getArgs(handCards.size - 1)
         secondCardNumber = getArgs(handCards.size - 1)
     }
 
-    private fun printCards(cards : ArrayList<Card>) {
+    internal fun printCards(cards : ArrayList<Card>) {
+        print("| ")
         for (i in 0..cards.size - 1) {
-            println ("(${i})  масть : ${cards[i].suit}   стоимость карты : ${cards[i].rank}")
+            print("${cards[i].name}")
+            when (cards[i].suit) {
+                "spades"   -> { print("♠ | ") }
+                "clubs"    -> { print("♣ | ") }
+                "diamonds" -> { print("♦ | ") }
+                "hearts"   -> { print("♥ | ") }
+            }
+
         }
+        println()
     }
 
     private fun getArgs(range : Int) : Int {   //Добавить проверку на то, что карты разные (Лиза)

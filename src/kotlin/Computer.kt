@@ -4,7 +4,7 @@ import java.util.*
 
 public class Computer() : Player() {
 
-    override internal fun activeClick() : Card {
+    override internal fun activeClick() : Card {""
         val card = activeStrategy()
         Game.activeSuit = card.suit
         return card
@@ -85,23 +85,26 @@ public class Computer() : Player() {
             else { goodCards.add(handCards[i]); sum += 11 + additionalScore }
         }
         val sizeMarriage = arrayOfMarriages.size
-        val marriageSuit = arrayOfMarriages[sizeMarriage - 1]
-        if (sizeMarriage > 0) { marriagesToUse(marriageSuit) }
+
+        if (sizeMarriage > 0) {
+            val marriageSuit = arrayOfMarriages[sizeMarriage - 1]
+            marriagesToUse(marriageSuit)
+        }
         else { Game.sortBySuits(goodCards) }
         return sum
     }
 
-    private fun marriagesToUse(suit : Char) {
+    private fun marriagesToUse(suit : String) {
         val kingRank  = 4
         val queenRank = 3
         var last  = arrayOfMarriages.size - 1
         val king  = Card(suit, kingRank)
         val queen = Card(suit, queenRank)
         when (suit) {
-            's' -> { sum += 40  }
-            'c' -> { sum += 60  }
-            'd' -> { sum += 80  }
-            'h' -> { sum += 100 }
+            "spades"   -> { sum += 40  }
+            "clubs"    -> { sum += 60  }
+            "diamonds" -> { sum += 80  }
+            "hearts"   -> { sum += 100 }
         }
         if (!goodCards.contains(king)) {
             Game.sortBySuits(goodCards)
@@ -190,12 +193,12 @@ public class Computer() : Player() {
         goodCards = Game.sortBySuits(goodCards)
     }
 
-    private fun suitIndex(suit : Char) : Int {
+    private fun suitIndex(suit : String) : Int {
         when (suit) {
-            's' -> { return 0 }
-            'c' -> { return 1 }
-            'd' -> { return 2 }
-            'h' -> { return 3 }
+            "spades"   -> { return 0 }
+            "clubs"    -> { return 1 }
+            "diamonds" -> { return 2 }
+            "hearts"   -> { return 3 }
         }
         return 0
     }
@@ -210,5 +213,4 @@ public class Computer() : Player() {
         }
         return false
     }
-
 }

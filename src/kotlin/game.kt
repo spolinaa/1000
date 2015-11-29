@@ -3,7 +3,7 @@ package kotlin
 import java.util.*
 
 internal object Game {
-    private val suits = arrayOf('s', 'c', 'd', 'h') // пики, крести, бубны, черви
+    internal val suits = arrayOf("spades", "clubs", "diamonds", "hearts") // пики, крести, бубны, черви
     private val ranks = arrayOf(11, 10, 4, 3, 2, 0)
     private var cardArray : Array<Array<Card>> = Array(4,
             { i -> Array(6, { j -> Card(suits[i], ranks[j]) }) })
@@ -11,12 +11,12 @@ internal object Game {
     internal val HumanPlayer = Human()
     internal val ComputerPlayer1 = Computer()
     internal val ComputerPlayer2 = Computer()
-    internal var talon : Array<Card> = Array(3, { Card(' ', 0) })
+    internal var talon : Array<Card> = Array(3, { Card("", 0) })
 
     internal var firstHand : Player = ComputerPlayer1
     internal var activePlayer : Player = firstHand
-    internal var trump : Char? = null
-    internal var activeSuit = ' '
+    internal var trump : String? = null
+    internal var activeSuit = ""
 
     private fun leftPlayer() : Player {
         when (activePlayer) {
@@ -39,6 +39,7 @@ internal object Game {
     private fun bidding() {
         var bid = 100
         var count = 0
+        HumanPlayer.printCards(HumanPlayer.handCards)
         while (count < 2) {
             activePlayer = leftPlayer()
             if (!activePlayer.pass) {
@@ -115,7 +116,7 @@ internal object Game {
     }
 
     private fun shuffle() : Array<Card> {
-        var shuffledCards : Array<Card> = Array(24, { Card(' ', 0) })
+        var shuffledCards : Array<Card> = Array(24, { Card("", 0) })
         for (i in 0..suits.size - 1) {
             for (j in 0..ranks.size - 1) {
                 shuffledCards[i * 6 + j] = cardArray[i][j]
@@ -139,13 +140,13 @@ internal object Game {
 
     private fun cardsDeal(shuffledCards : Array<Card>) {
         for (i in 0..6) {
-            HumanPlayer.handCards[i] = shuffledCards[i]
+            HumanPlayer.handCards.add(shuffledCards[i])
         }
         for (i in 7..13) {
-            ComputerPlayer1.handCards[i - 7] = shuffledCards[i]
+            ComputerPlayer1.handCards.add(shuffledCards[i])
         }
         for (i in 14..20) {
-            ComputerPlayer2.handCards[i - 14] = shuffledCards[i]
+            ComputerPlayer2.handCards.add(shuffledCards[i])
         }
         val startCard = 21
         talon = Array(3, {i -> shuffledCards[i + startCard]})
@@ -162,10 +163,10 @@ internal object Game {
 
         for (i in 0..handC.size - 1) {
             when (handC[i].suit) {
-                's' -> spades.add(handC[i])
-                'c' -> clubs.add(handC[i])
-                'd' -> diamonds.add(handC[i])
-                'h' -> hearts.add(handC[i])
+                "spades"   -> spades.add(handC[i])
+                "clubs"    -> clubs.add(handC[i])
+                "diamonds" -> diamonds.add(handC[i])
+                "hearts"   -> hearts.add(handC[i])
             }
         }
         spades = sortByRanks(spades)
@@ -190,7 +191,6 @@ internal object Game {
             for (i in suitCards) {
                 if (i.rank == j) {
                     sortedCards.add(sortedCards.size, i)
-                    println(sortedCards[0].rank)
                 }
             }
         }
@@ -237,11 +237,11 @@ internal object Game {
             return HumanPlayer.humanInput()
         }
         if (reviewNines(ComputerPlayer1) || reviewNines(ComputerPlayer2)) {
-            println ("У меня на руках четыре девятки")
+            println ("У меня на руках четыре девятки. Карты будут пересданы")
             return true
         }
         if (review14(ComputerPlayer1) || review14(ComputerPlayer2)) {
-            println ("У меня на руках сумма карт меньше 14")
+            println ("У меня на руках сумма карт меньше 14. Карты будут пересданы")
             return true
         }
         return false

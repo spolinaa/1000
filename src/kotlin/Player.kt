@@ -41,10 +41,10 @@ abstract internal class Player() {
         if (size == 0) { return sum }
         for (i in 0..size - 1) {
             when (arrayOfMarriages[i]) {
-                's' -> { sum += 40  }
-                'c' -> { sum += 60  }
-                'd' -> { sum += 80  }
-                'h' -> { sum += 100 }
+                "spades"   -> { sum += 40  }
+                "clubs"    -> { sum += 60  }
+                "diamonds" -> { sum += 80  }
+                "hearts"   -> { sum += 100 }
             }
         }
         return sum
@@ -60,10 +60,10 @@ abstract internal class Player() {
         handCards.removeAt(Math.min(firstCardNumber, secondCardNumber))
     }
 
-    protected fun haveMarriage() : ArrayList<Char> {
+    protected fun haveMarriage() : ArrayList<String> {
         val suits = arrayOf('s', 'c', 'd', 'h')
-        var res : ArrayList<Char> = ArrayList()
-        for (i in suits) {
+        var res : ArrayList<String> = ArrayList()
+        for (i in Game.suits) {
             val king  = handCards.contains(Card(i, 4))
             val queen = handCards.contains(Card(i, 3))
             if (king && queen) { res.add(i) }

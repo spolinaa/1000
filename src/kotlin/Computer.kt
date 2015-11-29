@@ -3,7 +3,6 @@ package kotlin
 import java.util.*
 
 public class Computer() : Player() {
-
     override internal fun activeClick() : Card {""
         val card = activeStrategy()
         Game.activeSuit = card.suit
@@ -166,8 +165,19 @@ public class Computer() : Player() {
                 val card = availableCards[i]
                 if (badCards.contains(availableCards[i])) { availableBadCards.add(card) }
             }
-            findLowCards(1, availableBadCards)
-            return removeCard(handCards[secondCardNumber], badCards)
+            val availableBadSize = availableBadCards.size
+            when (availableBadSize) {
+                0 -> { }
+                1 -> {
+                    availableBadCards[0]
+                    return removeCard(availableBadCards[0], badCards)
+                }
+                else -> {
+                    findLowCards(1, availableBadCards)
+                    return removeCard(handCards[secondCardNumber], badCards)
+                }
+            }
+
         }
         findLowCards(1, availableCards) //если badCards нет, тогда отдаем самую маленькую из handCards
         return removeCard(handCards[secondCardNumber], availableCards)

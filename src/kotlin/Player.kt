@@ -18,6 +18,7 @@ abstract internal class Player() {
     internal var firstCardNumber  = 0
     internal var secondCardNumber = 1
 
+
     abstract internal fun finalObligation()
     abstract internal fun activeClick() : Card
     abstract internal fun passiveClick() : Card

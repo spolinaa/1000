@@ -41,7 +41,7 @@ internal object Game {
         var bid = 100
         var count = 0
         activePlayer.obligation = bid
-        HumanPlayer.printCards(HumanPlayer.handCards)
+        printCards(HumanPlayer.handCards)
         activePlayer = leftPlayer()
         while (count < 2) {
             if (!activePlayer.pass) {
@@ -116,13 +116,16 @@ internal object Game {
         correctShuffle()
         //торговля
         bidding()
+        //показывается прикуп
+        showTalon()
         ///анализ карт в прикупе
-        //первый игрок получает прикуп
+        talonChecking()
+        //активный игрок получает прикуп
         getTalon()
-        //роспись карт
         val opponent1 = leftPlayer()
         val opponent2 = rightPlayer()
         activePlayer.giveCards(opponent1, opponent2)
+        if (activePlayer == HumanPlayer) { printCards(HumanPlayer.handCards) }
         if (pointsDivision()) { ///кнопка "расписать" активна до тех пор, пока активный не нажмет "играть"
             firstHand = leftPlayer() //с кнопками условий не будет - будет ожидание нажатия + активность кнопки
             start()
@@ -133,6 +136,7 @@ internal object Game {
                 activePlayer.activeClick()
                 opponent1.passiveClick()
                 opponent2.passiveClick()
+                //выводить карты перед сравнением
             } else {
                 start()
             }
@@ -222,6 +226,15 @@ internal object Game {
         return sortedCards
     }
 
+    private fun showTalon() {
+        val showTalon : ArrayList<Card> = ArrayList()
+        print("Прикуп: ")
+        for (i in 0..talon.size - 1) {
+            showTalon.add(talon[i])
+        }
+        printCards(showTalon)
+    }
+
     private fun getTalon() {
         for (i in 0..talon.size - 1) {
             activePlayer.handCards.add(talon[i])
@@ -254,24 +267,86 @@ internal object Game {
 
     private fun firstRetakeChecking() : Boolean {
         if (reviewNines(HumanPlayer)) {
+            printCards(HumanPlayer.handCards)
             println ("У вас на руках четыре девятки. Хотите пересдать карты? Д/Н")
             return HumanPlayer.humanInput()
         }
         if (review14(HumanPlayer)) {
+            printCards(HumanPlayer.handCards)
             println ("У вас на руках сумма карт меньше 14. Хотите пересдать карты? Д/Н")
             return HumanPlayer.humanInput()
         }
-        if (reviewNines(ComputerPlayer1) || reviewNines(ComputerPlayer2)) {
-            println ("У меня на руках четыре девятки. Карты будут пересданы")
+        var player : Player? = null
+        if (reviewNines(ComputerPlayer1)) {
+            player = ComputerPlayer1
+        }
+        if (reviewNines(ComputerPlayer2)) {
+            player = ComputerPlayer2
+        }
+        if (player != null) {
+            println ("${player.name}: У меня на руках четыре девятки. Карты будут пересданы")
+            printCards(player.handCards)
             return true
         }
-        if (review14(ComputerPlayer1) || review14(ComputerPlayer2)) {
-            println ("У меня на руках сумма карт меньше 14. Карты будут пересданы")
+        if (review14(ComputerPlayer1)) {
+            player = ComputerPlayer1
+        }
+        if (review14(ComputerPlayer2)) {
+            player = ComputerPlayer2
+        }
+        if (player != null) {
+            println ("${player.name}: У меня на руках сумма карт меньше 14. Карты будут пересданы")
+            printCards(player.handCards)
             return true
         }
         return false
         // если у компьютера есть возможность пересдать карты - он обязательно это делает
         // если кто-то захотел пересдать - показать его карты и написать причину
+    }
+
+    private fun talonChecking() : Boolean {
+        var sum = 0
+        var counter9 = 0
+        for (i in 0..talon.size - 1) {
+            if (talon[i].rank == 0) { counter9++ }
+            else { sum += talon[i].rank }
+        }
+        if (activePlayer == HumanPlayer) {
+            if (sum < 5) {
+                println ("Сумма карт в прикупе меньше 5. Хотите пересдать карты? Д/Н")
+                return HumanPlayer.humanInput()
+            }
+            if (counter9 > 1) {
+                println ("Две девятки в прикупе. Хотите пересдать карты? Д/Н")
+                return HumanPlayer.humanInput()
+            }
+        }
+        else {
+            if (sum < 5) {
+                println("${activePlayer.name}: Сумма карт в прикупе меньше 5. Карты будут пересданы")
+                return true
+            }
+            if (counter9 > 1) {
+                println("${activePlayer.name}: Две девятки в прикупе. Карты будут пересданы")
+                return true
+            }
+        }
+        return false
+    }
+
+    internal fun printCards(cards : ArrayList<Card>) {
+        print("| ")
+        for (i in 0..cards.size - 1) {
+            print("${cards[i].name}")
+            when (cards[i].suit) {
+                "spades"   -> { print("♠ | ") }
+                "clubs"    -> { print("♣ | ") }
+                "diamonds" -> { print("♦ | ") }
+                "hearts"   -> { print("♥ | ") }
+            }
+
+        }
+        println()
     }
 }
 
@@ -311,9 +386,9 @@ internal object Game {
 //    в) штраф при третьем болте               (сразу после прибавления очков к общему счету - в самом конце раунда)
 //    г) сброс на 0 после 3х бочек             (сразу после прибавления очков к общему счету - в самом конце раунда)
 //    д) величина штрафа = 120
-//3 - пересдачи: а) сумма прикупа < 5          (после открытия прикупа - перед взятием карт активным игроком)
-//               б) на руках < 14 очков        (сразу после раздачи карт)
-//               в) 4 девятки после раздачи    (до торгов)
-//               г) 2 девятки в прикупе        (после открытия прикупа - перед взятием карт активным игроком)
+//3 - пересдачи: а) сумма прикупа < 5 !         (после открытия прикупа - перед взятием карт активным игроком)
+//               б) на руках < 14 очков!        (сразу после раздачи карт)
+//               в) 4 девятки после раздачи!    (до торгов)
+//               г) 2 девятки в прикупе!        (после открытия прикупа - перед взятием карт активным игроком)
 //               д) 4 девятки на руках         (после сброса карт)
 //4 - роспись по 60 очков оппонентам, у активного вычитается столько, сколько заявил на торгах

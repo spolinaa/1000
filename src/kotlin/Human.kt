@@ -20,7 +20,7 @@ public class Human() : Player() {
     private fun click() : Card {
         println("Введите номер карты")
         val availableCards = availableCards()
-        printCards(availableCards)
+        Game.printCards(availableCards)
         val s = readLine()?.toInt() ?: 0
         val card = availableCards[s]
         handCards.remove(card)
@@ -40,7 +40,7 @@ public class Human() : Player() {
     }
 
     override internal fun finalObligation() {
-        printCards(handCards)
+        Game.printCards(handCards)
         println("Выберите ставку")
         val s = readLine()?.toInt() ?: 0
         val maxSum = sumWithMarriage()
@@ -50,24 +50,9 @@ public class Human() : Player() {
     }
     //♦️♥️♣️♠️
     override protected fun chooseCardsToGive() {
-        printCards(handCards)
+        Game.printCards(handCards)
         firstCardNumber  = getArgs(handCards.size - 1)
         secondCardNumber = getArgs(handCards.size - 1)
-    }
-
-    internal fun printCards(cards : ArrayList<Card>) {
-        print("| ")
-        for (i in 0..cards.size - 1) {
-            print("${cards[i].name}")
-            when (cards[i].suit) {
-                "spades"   -> { print("♠ | ") }
-                "clubs"    -> { print("♣ | ") }
-                "diamonds" -> { print("♦ | ") }
-                "hearts"   -> { print("♥ | ") }
-            }
-
-        }
-        println()
     }
 
     private fun getArgs(range : Int) : Int {   //Добавить проверку на то, что карты разные (Лиза)

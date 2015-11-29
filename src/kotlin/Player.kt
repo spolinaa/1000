@@ -3,6 +3,7 @@ package kotlin
 import java.util.*
 
 abstract internal class Player() {
+    internal var name = ""
     internal var handCards : ArrayList<Card> = ArrayList()
     internal var obligation = 0
     internal var pass = false
@@ -17,7 +18,7 @@ abstract internal class Player() {
     internal var firstCardNumber  = 0
     internal var secondCardNumber = 1
 
-    abstract internal fun finalObligation() : Int
+    abstract internal fun finalObligation()
     abstract internal fun activeClick() : Card
     abstract internal fun passiveClick() : Card
     abstract internal fun askPointsDivision() : Boolean
@@ -52,8 +53,8 @@ abstract internal class Player() {
 
     internal fun giveCards(p1 : Player, p2 : Player) {
         chooseCardsToGive()
-        p1.handCards.add(p1.handCards[firstCardNumber])
-        p2.handCards.add(p2.handCards[secondCardNumber])
+        p1.handCards.add(handCards[firstCardNumber])
+        p2.handCards.add(handCards[secondCardNumber])
         p1.handCards = Game.sortBySuits(p1.handCards)
         p2.handCards = Game.sortBySuits(p2.handCards)
         handCards.removeAt(Math.max(firstCardNumber, secondCardNumber))

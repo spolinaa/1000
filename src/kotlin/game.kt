@@ -11,6 +11,7 @@ internal object Game {
     internal val HumanPlayer = Human()
     internal val ComputerPlayer1 = Computer()
     internal val ComputerPlayer2 = Computer()
+
     internal var talon : Array<Card> = Array(3, { Card("", 0) })
 
     internal var firstHand : Player = ComputerPlayer1
@@ -39,16 +40,26 @@ internal object Game {
     private fun bidding() {
         var bid = 100
         var count = 0
+        activePlayer.obligation = bid
         HumanPlayer.printCards(HumanPlayer.handCards)
+        activePlayer = leftPlayer()
         while (count < 2) {
-            activePlayer = leftPlayer()
             if (!activePlayer.pass) {
                 var newBid = activePlayer.askObligation(bid)
-                if (newBid > bid) { bid = newBid }
-                else { count++; activePlayer.pass = true }
+                if (newBid > bid) {
+                    bid = newBid
+                    activePlayer.obligation = bid
+                }
+                else {
+                    count++;
+                    activePlayer.pass = true
+                    println("${activePlayer.name}: Пас")
+                }
             }
-            activePlayer.obligation = bid
+            activePlayer = leftPlayer()
         }
+        if (activePlayer.pass) { activePlayer = leftPlayer() }
+
     }
 
     private fun correctShuffle() {
@@ -80,6 +91,20 @@ internal object Game {
         activePlayer.firstCardNumber = 0
         activePlayer.secondCardNumber = 1
         Computer().inaccessibleCards = ArrayList()
+        activePlayer.handCards  = ArrayList()
+        leftPlayer().handCards  = ArrayList()
+        rightPlayer().handCards = ArrayList()
+        activePlayer.pass  = false
+        leftPlayer().pass  = false
+        rightPlayer().pass = false
+
+    }
+
+    public fun meeting() {
+        ComputerPlayer1.name =  "Компьютер Лиза"
+        ComputerPlayer2.name =  "Компьютер Полина"
+        println("Введите ваше имя")
+        HumanPlayer.name =  readLine() ?: "Игрок"
     }
 
     public fun start() {
@@ -92,19 +117,18 @@ internal object Game {
         //торговля
         bidding()
         ///анализ карт в прикупе
-
         //первый игрок получает прикуп
         getTalon()
         //роспись карт
+        val opponent1 = leftPlayer()
+        val opponent2 = rightPlayer()
+        activePlayer.giveCards(opponent1, opponent2)
         if (pointsDivision()) { ///кнопка "расписать" активна до тех пор, пока активный не нажмет "играть"
             firstHand = leftPlayer() //с кнопками условий не будет - будет ожидание нажатия + активность кнопки
             start()
         }
         else {
-            val opponent1 = leftPlayer()
-            val opponent2 = rightPlayer()
-            activePlayer.giveCards(opponent1, opponent2)
-            activePlayer.obligation = activePlayer.finalObligation()
+            HumanPlayer.finalObligation()
             if (!firstRetakeChecking()) {
                 activePlayer.activeClick()
                 opponent1.passiveClick()
@@ -150,6 +174,7 @@ internal object Game {
         }
         val startCard = 21
         talon = Array(3, {i -> shuffledCards[i + startCard]})
+
         HumanPlayer.handCards = sortBySuits(HumanPlayer.handCards)
         ComputerPlayer1.handCards = sortBySuits(ComputerPlayer1.handCards)
         ComputerPlayer2.handCards = sortBySuits(ComputerPlayer2.handCards)

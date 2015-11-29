@@ -13,7 +13,10 @@ public class Computer() : Player() {
     override internal fun passiveClick() : Card = passiveStrategy()
 
     override internal fun askPointsDivision() : Boolean {
-        if (sum < obligation) { return true }
+        if (sum < obligation) {
+            println("${name}: Распишем")
+            return true
+        }
         return false
     }
 
@@ -23,7 +26,9 @@ public class Computer() : Player() {
         return sum
     }
 
-    override internal fun finalObligation() : Int = sum
+    override internal fun finalObligation() {
+        obligation = sum
+    }
 
     private fun findLowCards(n : Int, array : ArrayList<Card>) {
         val size = array.size

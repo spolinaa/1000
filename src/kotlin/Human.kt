@@ -39,13 +39,14 @@ public class Human() : Player() {
         return nextBid
     }
 
-    override internal fun finalObligation() : Int {
+    override internal fun finalObligation() {
+        printCards(handCards)
         println("Выберите ставку")
         val s = readLine()?.toInt() ?: 0
-        if (s < obligation) { return obligation }
         val maxSum = sumWithMarriage()
-        if (s > maxSum) { return maxSum }
-        return s
+        if (s >= obligation) { obligation = s }
+        if (s > maxSum) { obligation = maxSum }
+        println("Ставка: ${obligation}")
     }
     //♦️♥️♣️♠️
     override protected fun chooseCardsToGive() {
@@ -70,6 +71,7 @@ public class Human() : Player() {
     }
 
     private fun getArgs(range : Int) : Int {   //Добавить проверку на то, что карты разные (Лиза)
+        println("Введите номер карты для сброса")
         var args : Int = readLine()?.toInt() ?: getArgs(range)
         if (args > range || args < 0) {
             args = getArgs(range)

@@ -117,7 +117,6 @@ internal object Game {
         //торговля
         bidding()
         //показывается прикуп
-        showTalon()
         ///анализ карт в прикупе
         talonChecking()
         //активный игрок получает прикуп
@@ -302,36 +301,6 @@ internal object Game {
         return false
         // если у компьютера есть возможность пересдать карты - он обязательно это делает
         // если кто-то захотел пересдать - показать его карты и написать причину
-    }
-
-    private fun talonChecking() : Boolean {
-        var sum = 0
-        var counter9 = 0
-        for (i in 0..talon.size - 1) {
-            if (talon[i].rank == 0) { counter9++ }
-            else { sum += talon[i].rank }
-        }
-        if (activePlayer == HumanPlayer) {
-            if (sum < 5) {
-                println ("Сумма карт в прикупе меньше 5. Хотите пересдать карты? Д/Н")
-                return HumanPlayer.humanInput()
-            }
-            if (counter9 > 1) {
-                println ("Две девятки в прикупе. Хотите пересдать карты? Д/Н")
-                return HumanPlayer.humanInput()
-            }
-        }
-        else {
-            if (sum < 5) {
-                println("${activePlayer.name}: Сумма карт в прикупе меньше 5. Карты будут пересданы")
-                return true
-            }
-            if (counter9 > 1) {
-                println("${activePlayer.name}: Две девятки в прикупе. Карты будут пересданы")
-                return true
-            }
-        }
-        return false
     }
 
     internal fun printCards(cards : ArrayList<Card>) {

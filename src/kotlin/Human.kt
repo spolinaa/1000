@@ -1,56 +1,65 @@
 package kotlin
+import java.util.*
 
 public class Human() : Player() {
-    override internal fun click() {}
-    override internal fun askPointsDivision() : Boolean {
-        println("Расписать? Д/Н")
+    internal fun humanInput() : Boolean {
         val s = readLine() ?: ""
-        when (s) {
-            "Д" -> { return true }
-        }
+        if (s == "Д") { return true }
         return false
     }
 
-    override internal fun askObligation(bid : Int) : Int {
-        obligation = maxBid()
-        return maxBid()
+    override internal fun activeClick() : Card {
+        val card = click()
+        Game.activeSuit = card.suit
+        return card
     }
 
-    override internal fun finalObligation() : Int {
-        arrayOfMarriages = haveMarriage()
-        if (maxBid() < obligation) { return obligation }
-        return maxBid()
+    override internal fun passiveClick() : Card = click()
+
+    private fun click() : Card {
+        Game.printCards(availableCards())
+        println("Ваш ход: ")
+        val args = getArgs(availableCards().size - 1)
+        val card = availableCards()[args]
+        handCards.remove(card)
+        Computer().inaccessibleCards.add(card)
+        return card
     }
 
-    private fun sumWithMarriage() : Int {
-        var sum = 120
-        val size = arrayOfMarriages.size
-        if (size == 0) { return sum }
-        for (i in 0..size - 1) {
-            when (arrayOfMarriages[i]) {
-                's' -> { sum += 40  }
-                'c' -> { sum += 60  }
-                'd' -> { sum += 80  }
-                'h' -> { sum += 100 }
-            }
-        }
-        return sum
+    override internal fun askPointsDivision() : Boolean {
+
+        println("Расписать? Д/Н")
+        return humanInput()
     }
 
-    private fun maxBid() : Int {
+    override protected fun askPlayerToRaise(nextBid : Int) : Int {
+        println("${nextBid}? Д/Н")
+        if (!humanInput()) { return 0 }
+        return nextBid
+    }
+
+    override internal fun finalObligation() {
+        //Game.printCards(handCards)
+        println("Выберите ставку")
         val s = readLine()?.toInt() ?: 0
         val maxSum = sumWithMarriage()
-        if (s > maxSum) { return maxSum }
-        return s
+        if (s >= obligation) { obligation = s }
+        if (s > maxSum) { obligation = maxSum }
+        println("Ставка: ${obligation}")
     }
 
-    override protected fun chooseCards() {
-        var humanCards = handCards
-        for (i in 0..humanCards.size - 1) {
-            println ("(${i})  suit : ${humanCards[i].suit}   rank : ${humanCards[i].rank}")
+    override protected fun chooseCardsToGive() {
+        Game.printCards(handCards)
+        println("Выберите две карты для сноса")
+        firstCardNumber  = getArgs(handCards.size - 1)
+        secondCardNumber = getArgs(handCards.size - 1)
+    }
+
+    internal fun getArgs(range : Int) : Int {   //Добавить проверку на то, что карты разные (Лиза)
+        var args : Int = readLine()?.toInt() ?: getArgs(range)
+        if (args > range || args < 0) {
+            args = getArgs(range)
         }
+        return args
     }
-
-    override protected var firstCardNumber = Game.getArgs(handCards.size - 1)
-    override protected var secondCardNumber = Game.getArgs(handCards.size - 1)
 }

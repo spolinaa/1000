@@ -1,6 +1,9 @@
+/* Trick-taking game for three players "1000"
+by Sokolova Polina & Kuzmina Liza */
+
 package kotlin
 
-class Card(suit : String, rank : Int) {
+class Card(suit : Char, rank : Int) {
     internal var suit = suit
     internal var rank = rank
     internal var isTrump = false
@@ -16,5 +19,4 @@ class Card(suit : String, rank : Int) {
             else -> { return "" }
         }
     }
-
 }

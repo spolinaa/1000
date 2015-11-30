@@ -1,8 +1,11 @@
+/* Trick-taking game for three players "1000"
+by Sokolova Polina & Kuzmina Liza */
+
 package kotlin
 
 import java.util.*
 
-abstract internal class Player() {
+abstract public class Player() {
     internal var name = ""
     internal var handCards : ArrayList<Card> = ArrayList()
     internal var obligation = 0
@@ -14,10 +17,8 @@ abstract internal class Player() {
     internal var barrelBolts = 0
     internal var bolts = 0 ///не прибавлять ничего, если игрок на бочке
     internal var climbDownFromBarrel = 0
-
-    internal var firstCardNumber  = 0
+    internal var firstCardNumber = 0
     internal var secondCardNumber = 1
-
 
     abstract internal fun finalObligation()
     abstract internal fun activeClick() : Card
@@ -26,6 +27,10 @@ abstract internal class Player() {
 
     abstract protected fun askPlayerToRaise(nextBid : Int) : Int
     abstract protected fun chooseCardsToGive()
+
+    internal fun printScores(score : Int) {
+        print("$name: $score, ")
+    }
 
     internal fun askObligation(bid : Int) : Int {
         val maxSum = sumWithMarriage()
@@ -43,10 +48,10 @@ abstract internal class Player() {
         if (size == 0) { return sum }
         for (i in 0..size - 1) {
             when (arrayOfMarriages[i]) {
-                "spades"   -> { sum += 40  }
-                "clubs"    -> { sum += 60  }
-                "diamonds" -> { sum += 80  }
-                "hearts"   -> { sum += 100 }
+                's' -> { sum += 40  }
+                'c' -> { sum += 60  }
+                'd' -> { sum += 80  }
+                'h' -> { sum += 100 }
             }
         }
         return sum
@@ -62,9 +67,8 @@ abstract internal class Player() {
         handCards.removeAt(Math.min(firstCardNumber, secondCardNumber))
     }
 
-    protected fun haveMarriage() : ArrayList<String> {
-        val suits = arrayOf('s', 'c', 'd', 'h')
-        var res : ArrayList<String> = ArrayList()
+    protected fun haveMarriage() : ArrayList<Char> {
+        var res : ArrayList<Char> = ArrayList()
         for (i in Game.suits) {
             val king  = handCards.contains(Card(i, 4))
             val queen = handCards.contains(Card(i, 3))
@@ -101,5 +105,11 @@ abstract internal class Player() {
         if (bolts == 3) { bolts = 0; totalScore -= fine }
         if (barrelBolts == 3) { barrelBolts = 0; totalScore -= fine }
         if (climbDownFromBarrel == 3) { climbDownFromBarrel = 0; totalScore -= fine }
+    }
+
+    internal fun clearBarrel() {
+        barrelBolts = 0
+        climbDownFromBarrel++
+        onBarrel = false
     }
 }

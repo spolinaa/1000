@@ -1,6 +1,7 @@
-package kotlin
+/* Trick-taking game for three players "1000"
+by Sokolova Polina & Kuzmina Liza */
 
-import java.util.*
+package kotlin
 
 public class Human() : Player() {
     internal fun humanInput() : Boolean {
@@ -18,11 +19,10 @@ public class Human() : Player() {
     override internal fun passiveClick() : Card = click()
 
     private fun click() : Card {
-        println("Введите номер карты")
-        val availableCards = availableCards()
-        Game.printCards(availableCards)
-        val s = readLine()?.toInt() ?: 0
-        val card = availableCards[s]
+        Game.printCards(availableCards())
+        println("Ваш ход: ")
+        val args = getArgs(availableCards().size - 1)
+        val card = availableCards()[args]
         handCards.remove(card)
         Computer().inaccessibleCards.add(card)
         return card
@@ -34,35 +34,33 @@ public class Human() : Player() {
     }
 
     override protected fun askPlayerToRaise(nextBid : Int) : Int {
-        println("${nextBid}? Д/Н")
+        println("$nextBid? Д/Н")
         if (!humanInput()) { return 0 }
         return nextBid
     }
 
     override internal fun finalObligation() {
-        Game.printCards(handCards)
+        //Game.printCards(handCards)
         println("Выберите ставку")
         val s = readLine()?.toInt() ?: 0
         val maxSum = sumWithMarriage()
         if (s >= obligation) { obligation = s }
         if (s > maxSum) { obligation = maxSum }
-        println("Ставка: ${obligation}")
+        println("Ставка: $obligation")
     }
-    //♦️♥️♣️♠️
+
     override protected fun chooseCardsToGive() {
         Game.printCards(handCards)
+        println("Выберите две карты для сноса")
         firstCardNumber  = getArgs(handCards.size - 1)
         secondCardNumber = getArgs(handCards.size - 1)
     }
 
-    private fun getArgs(range : Int) : Int {   //Добавить проверку на то, что карты разные (Лиза)
-        println("Введите номер карты для сброса")
+    internal fun getArgs(range : Int) : Int {   //Добавить проверку на то, что карты разные (Лиза)
         var args : Int = readLine()?.toInt() ?: getArgs(range)
         if (args > range || args < 0) {
             args = getArgs(range)
         }
         return args
     }
-
-
 }

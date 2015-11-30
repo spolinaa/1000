@@ -1,9 +1,12 @@
+/* Trick-taking game for three players "1000"
+by Sokolova Polina & Kuzmina Liza */
+
 package kotlin
 
 import java.util.*
 
 public class Computer() : Player() {
-    override internal fun activeClick() : Card {""
+    override internal fun activeClick() : Card {
         val card = activeStrategy()
         Game.activeSuit = card.suit
         return card
@@ -12,15 +15,16 @@ public class Computer() : Player() {
     override internal fun passiveClick() : Card = passiveStrategy()
 
     override internal fun askPointsDivision() : Boolean {
+        sum = cardAnalysis()
         if (sum < obligation) {
-            println("${name}: Распишем")
+            println("$name: Распишем")
             return true
         }
         return false
     }
 
     override protected fun askPlayerToRaise(nextBid : Int) : Int {
-        sum = cardAnalysis(handCards)
+        sum = cardAnalysis()
         if (sum < nextBid) { return 0 }
         return sum
     }
@@ -48,8 +52,8 @@ public class Computer() : Player() {
         val sizeBad = badCards.size
         when (sizeBad) {
             2 -> {
-                 firstCardNumber = handCards.indexOf(badCards[0])
-                 firstCardNumber = handCards.indexOf(badCards[1])
+                firstCardNumber = handCards.indexOf(badCards[0])
+                firstCardNumber = handCards.indexOf(badCards[1])
             }
             1 -> {
                 firstCardNumber = handCards.indexOf(badCards[0])
@@ -63,13 +67,13 @@ public class Computer() : Player() {
     private var badCards  : ArrayList<Card> = ArrayList() //карты, которыми нельзя взять взятку
     private var sum = 0
 
-    private fun cardAnalysis(cards : ArrayList<Card>) : Int {
+    private fun cardAnalysis() : Int {
         var sum = 0
-        val size = cards.size
-        val additionalScore = 5
+        val size = handCards.size
+        val additionalScore = 10
         for (i in 0..size - 1) {
-            val suit = cards[i].suit
-            val rank = cards[i].rank
+            val suit = handCards[i].suit
+            val rank = handCards[i].rank
             var nextRank = 0
             if (rank != 11) {
                 when (rank) {
@@ -89,7 +93,6 @@ public class Computer() : Player() {
             else { goodCards.add(handCards[i]); sum += 11 + additionalScore }
         }
         val sizeMarriage = arrayOfMarriages.size
-
         if (sizeMarriage > 0) {
             val marriageSuit = arrayOfMarriages[sizeMarriage - 1]
             marriagesToUse(marriageSuit)
@@ -98,23 +101,22 @@ public class Computer() : Player() {
         return sum
     }
 
-    private fun marriagesToUse(suit : String) {
+    private fun marriagesToUse(suit : Char) {
         val kingRank  = 4
         val queenRank = 3
         var last  = arrayOfMarriages.size - 1
         val king  = Card(suit, kingRank)
         val queen = Card(suit, queenRank)
         when (suit) {
-            "spades"   -> { sum += 40  }
-            "clubs"    -> { sum += 60  }
-            "diamonds" -> { sum += 80  }
-            "hearts"   -> { sum += 100 }
+            's' -> { sum += 40  }
+            'c' -> { sum += 60  }
+            'd' -> { sum += 80  }
+            'h' -> { sum += 100 }
         }
         if (!goodCards.contains(king)) {
             Game.sortBySuits(goodCards)
             val sizeGood = goodCards.size
             goodCards.add(sizeGood, king)
-            val sizeBad = badCards.size
             badCards.remove(queen)
         }
         else {
@@ -189,7 +191,7 @@ public class Computer() : Player() {
         inaccessibleCards = Game.sortBySuits(inaccessibleCards)
         val size = inaccessibleCards.size
         var pointArray = Array(4, { 0 })
-        var index = 0
+        var index : Int
         for (i in 0..size - 1) {
             index = suitIndex(inaccessibleCards[i].suit)
             pointArray[index] += inaccessibleCards[i].rank
@@ -208,12 +210,12 @@ public class Computer() : Player() {
         goodCards = Game.sortBySuits(goodCards)
     }
 
-    private fun suitIndex(suit : String) : Int {
+    private fun suitIndex(suit : Char) : Int {
         when (suit) {
-            "spades"   -> { return 0 }
-            "clubs"    -> { return 1 }
-            "diamonds" -> { return 2 }
-            "hearts"   -> { return 3 }
+            's' -> { return 0 }
+            'c' -> { return 1 }
+            'd' -> { return 2 }
+            'h' -> { return 3 }
         }
         return 0
     }

@@ -17,7 +17,7 @@ public class Computer() : Player() {
     override internal fun askPointsDivision() : Boolean {
         sum = cardAnalysis()
         if (sum < obligation) {
-            println("$name: Распишем")
+            println("$name: Распишем\n")
             return true
         }
         return false
@@ -68,6 +68,7 @@ public class Computer() : Player() {
     private var sum = 0
 
     private fun cardAnalysis() : Int {
+        arrayOfMarriages = haveMarriage()
         var sum = 0
         val size = handCards.size
         val additionalScore = 10
@@ -135,13 +136,14 @@ public class Computer() : Player() {
         }
         else {
             val badSize = badCards.size
-            if (badSize > 0) {
-                findLowCards(1, badCards)
-                card = badCards[secondCardNumber]  ///взятку не взять, поэтому ходить самой маленькой
-                badCards.remove(card)
-            }
-            else {
-                card = handCards[0] //тут могут быть только дамы из захваленных пар, но взятку ими не взять
+            when (badSize) {
+                0 -> { card = handCards[0] }
+                1 -> { card = badCards[0]; badCards.remove(card) }
+                else -> {
+                    findLowCards(1, badCards)
+                    card = badCards[secondCardNumber]
+                    badCards.remove(card)
+                }
             }
         }
         handCards.remove(card)
@@ -163,7 +165,7 @@ public class Computer() : Player() {
         val availableSize = availableCards.size
         var availableBadCards : ArrayList<Card> = ArrayList()
         if (badSize > 0) {
-            for (i in 0..availableSize - 1) { //выбор самой маленькой из доступных badCards
+            for (i in 0..availableSize - 1) {
                 val card = availableCards[i]
                 if (badCards.contains(availableCards[i])) { availableBadCards.add(card) }
             }
@@ -181,7 +183,8 @@ public class Computer() : Player() {
             }
 
         }
-        findLowCards(1, availableCards) //если badCards нет, тогда отдаем самую маленькую из handCards
+        if (availableSize > 1) { findLowCards(1, availableCards) }
+        else secondCardNumber = 0
         return removeCard(handCards[secondCardNumber], availableCards)
     }
 

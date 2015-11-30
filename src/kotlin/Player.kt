@@ -10,12 +10,12 @@ abstract public class Player() {
     internal var handCards : ArrayList<Card> = ArrayList()
     internal var obligation = 0
     internal var pass = false
-    internal var arrayOfMarriages = haveMarriage()
+    internal var arrayOfMarriages : ArrayList<Char> = ArrayList()
     internal var totalScore   = 0
     internal var currentScore = 0
     internal var onBarrel = false
     internal var barrelBolts = 0
-    internal var bolts = 0 ///не прибавлять ничего, если игрок на бочке
+    internal var bolts = 0
     internal var climbDownFromBarrel = 0
     internal var firstCardNumber = 0
     internal var secondCardNumber = 1
@@ -29,7 +29,7 @@ abstract public class Player() {
     abstract protected fun chooseCardsToGive()
 
     internal fun printScores(score : Int) {
-        print("$name: $score, ")
+        print("| $name: $score ")
     }
 
     internal fun askObligation(bid : Int) : Int {
@@ -44,6 +44,7 @@ abstract public class Player() {
 
     protected fun sumWithMarriage() : Int {
         var sum = 120
+        arrayOfMarriages = haveMarriage()
         val size = arrayOfMarriages.size
         if (size == 0) { return sum }
         for (i in 0..size - 1) {
@@ -67,12 +68,30 @@ abstract public class Player() {
         handCards.removeAt(Math.min(firstCardNumber, secondCardNumber))
     }
 
-    protected fun haveMarriage() : ArrayList<Char> {
+    internal fun haveMarriage() : ArrayList<Char> {
         var res : ArrayList<Char> = ArrayList()
-        for (i in Game.suits) {
-            val king  = handCards.contains(Card(i, 4))
-            val queen = handCards.contains(Card(i, 3))
-            if (king && queen) { res.add(i) }
+        var counter = Array(4, { 0 })
+        for (i in 0..handCards.size - 1) {
+            if (handCards[i].rank == 4 || handCards[i].rank == 3) {
+                when (handCards[i].suit) {
+                    's' -> {
+                        if (counter[0] > 0) { res.add(handCards[i].suit) }
+                        counter[0]++
+                    }
+                    'c' -> {
+                        if (counter[1] > 0) { res.add(handCards[i].suit) }
+                        counter[1]++
+                    }
+                    'd' -> {
+                        if (counter[2] > 0) { res.add(handCards[i].suit) }
+                        counter[2]++
+                    }
+                    'h' -> {
+                        if (counter[3] > 0) { res.add(handCards[i].suit) }
+                        counter[3]++
+                    }
+                }
+            }
         }
         return res
     }

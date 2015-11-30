@@ -1,7 +1,6 @@
 /* Trick-taking game for three players "1000"
 by Sokolova Polina & Kuzmina Liza */
 
-
 package kotlin
 
 import java.util.*
@@ -24,7 +23,7 @@ internal object Game {
     internal var lastTrick : Player = firstHand
     internal var trump : Char? = null
     internal var activeSuit = ' '
-    internal var numberOfMotions = 0
+    private var numberOfMotions = 0
 
     internal var barrel : Player? = null
 
@@ -48,20 +47,20 @@ internal object Game {
 
     private fun bidding() {
         var bid = 100
-
         activePlayer.obligation = bid
-        printCards(HumanPlayer.handCards)
+        println("${activePlayer.name}: 100\n")
         activePlayer = leftPlayer(activePlayer)
         while (!(leftPlayer(activePlayer).pass && rightPlayer(activePlayer).pass)){
             if (!activePlayer.pass) {
                 var newBid = activePlayer.askObligation(bid)
                 if (newBid > bid) {
                     bid = newBid
+                    println("${activePlayer.name}: $bid\n")
                     activePlayer.obligation = bid
                 }
                 else {
                     activePlayer.pass = true
-                    println("${activePlayer.name}: Пас")
+                    println("${activePlayer.name}: Пас\n")
                 }
             }
             activePlayer = leftPlayer(activePlayer)
@@ -75,6 +74,9 @@ internal object Game {
         while (res) { //если (сумма очков < 14 || четыре 9) - возможно, пересдача
             shuffledCards = shuffle()
             cardsDeal(shuffledCards)
+            print("Ваши карты: ")
+            printCards(HumanPlayer.handCards)
+            println("\n")
             res = firstRetakeChecking()
         }
     }
@@ -93,17 +95,18 @@ internal object Game {
             }
             else { rightPlayer.barrelBolts++ }
             activePlayer.totalScore  -= activePlayer.obligation
-            println("Общий счет:")
+            print("Общий счет: ")
             activePlayer.printScores(activePlayer.totalScore)
             leftPlayer.printScores(leftPlayer.totalScore)
             rightPlayer.printScores(rightPlayer.totalScore)
-            println()
+            println("\n")
             return true
         }
         return false
     }
 
     private fun clearAll() {
+        println("_______________________________________________________________\n")
         activePlayer.obligation = 0
         activePlayer.currentScore  = 0
         leftPlayer(activePlayer).currentScore  = 0
@@ -128,12 +131,13 @@ internal object Game {
         ComputerPlayer2.totalScore = 0
         while (firstHand.totalScore < 1000 && leftPlayer(firstHand).totalScore < 1000
                 && rightPlayer(firstHand).totalScore < 1000) {
+            clearAll()
             gameOnBounds()
             simpleGame()
         }
     }
 
-    public fun meeting() {
+    private fun meeting() {
         ComputerPlayer1.name =  "Компьютер Лиза"
         ComputerPlayer2.name =  "Компьютер Полина"
         println("Введите ваше имя")
@@ -180,15 +184,16 @@ internal object Game {
     }
 
     private fun simpleGame() {
-
         startSimpleGame()
         for (i in 1..8) {
+            println("i = $i")
             comparison()
         }
         conclusion()
+        firstHand = leftPlayer(firstHand)
     }
 
-    public fun startSimpleGame() {
+    private fun startSimpleGame() {
         clearAll()
         activePlayer = firstHand
         correctShuffle()
@@ -203,15 +208,19 @@ internal object Game {
         val opponent1 = leftPlayer(activePlayer)
         val opponent2 = rightPlayer(activePlayer)
         activePlayer.giveCards(opponent1, opponent2)
-        if (activePlayer == HumanPlayer) { printCards(HumanPlayer.handCards) }
+        if (activePlayer == HumanPlayer) {
+            print("Ваши карты: ")
+            printCards(HumanPlayer.handCards)
+            println("\n")
+        }
         if (pointsDivision()) { ///кнопка "расписать" активна до тех пор, пока активный не нажмет "играть"
-            firstHand = leftPlayer(activePlayer) //с кнопками условий не будет - будет ожидание нажатия + активность кнопки
-            startSimpleGame()
+            firstHand = leftPlayer(firstHand) //с кнопками условий не будет - будет ожидание нажатия + активность кнопки
+            simpleGame()
         }
         else {
             HumanPlayer.finalObligation()
             if (firstRetakeChecking()) {
-                startSimpleGame()
+                simpleGame()
             }
         }
     }
@@ -223,6 +232,7 @@ internal object Game {
             showTalon.add(talon[i])
         }
         printCards(showTalon)
+        println("\n")
     }
 
     internal fun printCards(cards : ArrayList<Card>) {
@@ -236,7 +246,6 @@ internal object Game {
                 'h' -> { print("♥ | ") }
             }
         }
-        println()
     }
 
     private fun conclusion() {
@@ -264,7 +273,7 @@ internal object Game {
         activePlayer.imposeFines()
         leftPlayer.imposeFines()
         rightPlayer.imposeFines()
-        println("Общий счет:")
+        print("Общий счет: ")
         activePlayer.printScores(activePlayer.totalScore)
         leftPlayer.printScores(leftPlayer.totalScore)
         rightPlayer.printScores(rightPlayer.totalScore)
@@ -272,24 +281,26 @@ internal object Game {
         firstHand = leftPlayer(firstHand)
     }
 
-
-
     private fun comparison() {
-        val leftPlayer = leftPlayer(lastTrick)
-        val rightPlayer = rightPlayer(lastTrick)
+        var leftPlayer = leftPlayer(lastTrick)
+        var rightPlayer = rightPlayer(lastTrick)
         var card1 = lastTrick.activeClick()
+        printCards(arrayListOf(card1))
         val card2 = leftPlayer.passiveClick()
+        printCards(arrayListOf(card2))
         val card3 = rightPlayer.passiveClick()
-        val a = arrayListOf(card1, card2, card3)
-        printCards(a)
+        printCards(arrayListOf(card3))
+        println("\n")
+        val marriages = lastTrick.haveMarriage()
+        val size = marriages.size
         if ((card1.rank == 3 || card1.rank == 4) && numberOfMotions != 0) {
             for (i in lastTrick.handCards) {
                 if ((i.rank == 4 || i.rank == 3) && i.suit == card1.suit) {
                     trump = card1.suit
                     var toAdd = 0
                     when (card1.suit) {
-                        'c' -> toAdd = 40
-                        's' -> toAdd = 60
+                        's' -> toAdd = 40
+                        'c' -> toAdd = 60
                         'd' -> toAdd = 80
                         'h' -> toAdd = 100
                     }
@@ -332,11 +343,15 @@ internal object Game {
         if (winningCard == card2) {lastTrick = leftPlayer}
         if (winningCard == card3) {lastTrick = rightPlayer}
         lastTrick.currentScore += points
-        println("Текущий счет:")
+        numberOfMotions++
+
+        print("Текущий счет: ")
+        leftPlayer = leftPlayer(lastTrick)
+        rightPlayer = rightPlayer(lastTrick)
         lastTrick.printScores(lastTrick.currentScore)
         leftPlayer.printScores(leftPlayer.currentScore)
         rightPlayer.printScores(rightPlayer.currentScore)
-        println()
+        println("|\n")
     }
 
     private fun shuffle() : Array<Card> {
@@ -465,22 +480,22 @@ internal object Game {
         var text : String = ""
         if (reviewNines(ComputerPlayer1)) {
             player = ComputerPlayer1
-            text = "У меня на руках четыре девятки. Карты будут пересданы"
+            text = "У меня на руках четыре девятки. Карты будут пересданы\n"
             return true
         }
         if (reviewNines(ComputerPlayer2)) {
             player = ComputerPlayer2
-            text = "У меня на руках четыре девятки. Карты будут пересданы"
+            text = "У меня на руках четыре девятки. Карты будут пересданы\n"
             return true
         }
         if (review14(ComputerPlayer1)) {
             player = ComputerPlayer1
-            text = "У меня на руках сумма карт меньше 14. Карты будут пересданы"
+            text = "У меня на руках сумма карт меньше 14. Карты будут пересданы\n"
             return true
         }
         if (review14(ComputerPlayer2)) {
             player = ComputerPlayer2
-            text = "У меня на руках сумма карт меньше 14. Карты будут пересданы"
+            text = "У меня на руках сумма карт меньше 14. Карты будут пересданы\n"
             return true
         }
         if (player != null) { println ("$player: $text") }
@@ -498,29 +513,23 @@ internal object Game {
                 counter9++
             }
         }
-        if(talonRankSum < 5) {
+        if (talonRankSum < 5) {
             if (activePlayer == HumanPlayer) {
-                println ("The sum of points of talon < 5. Do you want to retake the cards?\nprint:\n0 - No\n1 - Yes")
-                val answer = HumanPlayer.getArgs(1)
-                if (answer == 1) {
-                    startSimpleGame()
-                }
+                println ("Сумма очков прикупа меньше 5. Хотите пересдать карты? Д/Н")
+                HumanPlayer.humanInput()
             }
             else {
-                println ("$activePlayer: The sum of points of talon < 5. Cards will be retaken")
+                println ("${activePlayer.name}: Сумма очков прикупа меньше 5. Карты будут пересданы\n")
                 startSimpleGame()
             }
         }
-        if(counter9 > 1) {
+        if (counter9 > 1) {
             if (activePlayer == HumanPlayer) {
-                println ("Two '9' in talon. Do you want to retake the cards?\nprint:\n0 - No\n1 - Yes")
-                val answer = HumanPlayer.getArgs(1)
-                if (answer == 1) {
-                    startSimpleGame()
-                }
+                println ("Две девятки в прикупе. Хотите пересдать карты? Д/Н")
+                HumanPlayer.humanInput()
             }
             else {
-                println ("${activePlayer.name}: Two '9' in talon. Cards will be retaken")
+                println ("${activePlayer.name}: Две девятки в прикупе. Карты будут пересданы\n")
                 startSimpleGame()
             }
         }

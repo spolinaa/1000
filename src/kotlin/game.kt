@@ -7,8 +7,8 @@ import java.util.*
 
 internal object Game {
     internal val suits = arrayOf('s', 'c', 'd', 'h') // пики, крести, бубны, черви
-    private val ranks = arrayOf(11, 10, 4, 3, 2, 0)
-    private var cardArray : Array<Array<Card>> = Array(4,
+    internal val ranks = arrayOf(11, 10, 4, 3, 2, 0)
+    internal var cardArray : Array<Array<Card>> = Array(4,
             { i -> Array(6, { j -> Card(suits[i], ranks[j]) }) })
 
     internal val HumanPlayer = Human()
@@ -45,82 +45,11 @@ internal object Game {
         return activePlayer
     }
 
-    private fun bidding() {
-        var bid = 100
-        activePlayer.obligation = bid
-        println("${activePlayer.name}: 100\n")
-        activePlayer = leftPlayer(activePlayer)
-        while (!(leftPlayer(activePlayer).pass && rightPlayer(activePlayer).pass)){
-            if (!activePlayer.pass) {
-                var newBid = activePlayer.askObligation(bid)
-                if (newBid > bid) {
-                    bid = newBid
-                    println("${activePlayer.name}: $bid\n")
-                    activePlayer.obligation = bid
-                }
-                else {
-                    activePlayer.pass = true
-                    println("${activePlayer.name}: Пас\n")
-                }
-            }
-            activePlayer = leftPlayer(activePlayer)
-        }
-        if (activePlayer.pass) { activePlayer = leftPlayer(activePlayer) }
-    }
-
-    private fun correctShuffle() {
-        var shuffledCards : Array<Card>
-        var res = true
-        while (res) { //если (сумма очков < 14 || четыре 9) - возможно, пересдача
-            shuffledCards = shuffle()
-            cardsDeal(shuffledCards)
-            print("Ваши карты: ")
-            printCards(HumanPlayer.handCards)
-            println("\n")
-            res = firstRetakeChecking()
-        }
-    }
-
-    private fun pointsDivision() : Boolean {
-        val points = 60
-        val leftPlayer = leftPlayer(activePlayer)
-        val rightPlayer = rightPlayer(activePlayer)
-        if (activePlayer.askPointsDivision()) {
-            if (!leftPlayer.onBarrel) {
-                leftPlayer.totalScore += points
-            }
-            else { leftPlayer.barrelBolts++ }
-            if (!rightPlayer.onBarrel) {
-                rightPlayer.totalScore += points
-            }
-            else { rightPlayer.barrelBolts++ }
-            activePlayer.totalScore  -= activePlayer.obligation
-            print("Общий счет: ")
-            activePlayer.printScores(activePlayer.totalScore)
-            leftPlayer.printScores(leftPlayer.totalScore)
-            rightPlayer.printScores(rightPlayer.totalScore)
-            println("\n")
-            return true
-        }
-        return false
-    }
-
-    private fun clearAll() {
-        println("_______________________________________________________________\n")
-        activePlayer.obligation = 0
-        activePlayer.currentScore  = 0
-        leftPlayer(activePlayer).currentScore  = 0
-        rightPlayer(activePlayer).currentScore = 0
-        activePlayer.firstCardNumber = 0
-        activePlayer.secondCardNumber = 1
-        Computer().inaccessibleCards = ArrayList()
-        activePlayer.handCards  = ArrayList()
-        leftPlayer(activePlayer).handCards  = ArrayList()
-        rightPlayer(activePlayer).handCards = ArrayList()
-        activePlayer.pass  = false
-        leftPlayer(activePlayer).pass  = false
-        rightPlayer(activePlayer).pass = false
-        numberOfMotions = 0
+    private fun meeting() {
+        ComputerPlayer1.name =  "Компьютер Лиза"
+        ComputerPlayer2.name =  "Компьютер Полина"
+        println("Введите ваше имя")
+        HumanPlayer.name =  readLine() ?: "Игрок"
     }
 
     public fun startGame() {
@@ -133,16 +62,10 @@ internal object Game {
                 && rightPlayer(firstHand).totalScore < 1000) {
             clearAll()
             gameOnBounds()
-            simpleGame()
+            if (!startSimpleGame()) { simpleGame() }
         }
     }
 
-    private fun meeting() {
-        ComputerPlayer1.name =  "Компьютер Лиза"
-        ComputerPlayer2.name =  "Компьютер Полина"
-        println("Введите ваше имя")
-        HumanPlayer.name =  readLine() ?: "Игрок"
-    }
 
     private fun gameOnBounds() {
         var onBound : Player? = null
@@ -184,174 +107,66 @@ internal object Game {
     }
 
     private fun simpleGame() {
-        startSimpleGame()
+        ComputerPlayer1.cardAnalysis()
+        ComputerPlayer2.cardAnalysis()
         for (i in 1..8) {
-            println("i = $i")
             comparison()
         }
         conclusion()
         firstHand = leftPlayer(firstHand)
     }
 
-    private fun startSimpleGame() {
-        clearAll()
+    public fun startSimpleGame() : Boolean {
         activePlayer = firstHand
         correctShuffle()
         bidding()
-        lastTrick = activePlayer
-        ///анализ карт в прикупе
-        showTalon()
-        taloneRetakeChecking()
-        //первый игрок получает прикуп
-        getTalon()
-        //роспись карт
         val opponent1 = leftPlayer(activePlayer)
         val opponent2 = rightPlayer(activePlayer)
+        lastTrick = activePlayer
+        showTalon()
+        if (talonChecking()) { return true }
+        getTalon()
         activePlayer.giveCards(opponent1, opponent2)
-        if (activePlayer == HumanPlayer) {
+        print("Ваши карты: ")
+        printCards(HumanPlayer.handCards)
+        println("\n")
+        if (pointsDivision()) { firstHand = leftPlayer(firstHand); return true }
+        activePlayer.finalObligation()
+        if (playerCardChecking()) { return true }
+        return false
+    }
+
+    private fun correctShuffle() {
+        var shuffledCards : Array<Card>
+        var res = true
+        while (res) {
+            clearAll()
+            shuffledCards = shuffle()
+            cardsDeal(shuffledCards)
             print("Ваши карты: ")
             printCards(HumanPlayer.handCards)
             println("\n")
-        }
-        if (pointsDivision()) { ///кнопка "расписать" активна до тех пор, пока активный не нажмет "играть"
-            firstHand = leftPlayer(firstHand) //с кнопками условий не будет - будет ожидание нажатия + активность кнопки
-            simpleGame()
-        }
-        else {
-            HumanPlayer.finalObligation()
-            if (firstRetakeChecking()) {
-                simpleGame()
-            }
+            res = playerCardChecking()
         }
     }
 
-    private fun showTalon() {
-        val showTalon : ArrayList<Card> = ArrayList()
-        print("Прикуп: ")
-        for (i in 0..talon.size - 1) {
-            showTalon.add(talon[i])
-        }
-        printCards(showTalon)
-        println("\n")
-    }
-
-    internal fun printCards(cards : ArrayList<Card>) {
-        print("| ")
-        for (i in 0..cards.size - 1) {
-            print("${cards[i].name}")
-            when (cards[i].suit) {
-                's' -> { print("♠ | ") }
-                'c' -> { print("♣ | ") }
-                'd' -> { print("♦ | ") }
-                'h' -> { print("♥ | ") }
-            }
-        }
-    }
-
-    private fun conclusion() {
-        val leftPlayer = leftPlayer(activePlayer)
-        val rightPlayer = rightPlayer(activePlayer)
-        if (activePlayer.currentScore < activePlayer.obligation) {
-            activePlayer.totalScore -= activePlayer.obligation
-            activePlayer.clearBarrel()
-        } else {
-            //будем считать, что игроку на бочке не разрешается идти меньше, чем на 120
-            activePlayer.totalScore += activePlayer.obligation
-        }
-        if (!leftPlayer.onBarrel) {
-            leftPlayer.totalScore += leftPlayer.currentScore
-        }
-        else {
-            leftPlayer.barrelBolts++
-        }
-        if (!rightPlayer.onBarrel) {
-            rightPlayer.totalScore += rightPlayer.currentScore
-        }
-        else {
-            rightPlayer.barrelBolts++
-        }
-        activePlayer.imposeFines()
-        leftPlayer.imposeFines()
-        rightPlayer.imposeFines()
-        print("Общий счет: ")
-        activePlayer.printScores(activePlayer.totalScore)
-        leftPlayer.printScores(leftPlayer.totalScore)
-        rightPlayer.printScores(rightPlayer.totalScore)
-        println()
-        firstHand = leftPlayer(firstHand)
-    }
-
-    private fun comparison() {
-        var leftPlayer = leftPlayer(lastTrick)
-        var rightPlayer = rightPlayer(lastTrick)
-        var card1 = lastTrick.activeClick()
-        printCards(arrayListOf(card1))
-        val card2 = leftPlayer.passiveClick()
-        printCards(arrayListOf(card2))
-        val card3 = rightPlayer.passiveClick()
-        printCards(arrayListOf(card3))
-        println("\n")
-        val marriages = lastTrick.haveMarriage()
-        val size = marriages.size
-        if ((card1.rank == 3 || card1.rank == 4) && numberOfMotions != 0) {
-            for (i in lastTrick.handCards) {
-                if ((i.rank == 4 || i.rank == 3) && i.suit == card1.suit) {
-                    trump = card1.suit
-                    var toAdd = 0
-                    when (card1.suit) {
-                        's' -> toAdd = 40
-                        'c' -> toAdd = 60
-                        'd' -> toAdd = 80
-                        'h' -> toAdd = 100
-                    }
-                    lastTrick.currentScore += toAdd
-                    break
-                }
-            }
-        }
-        var winningCard = card1
-        val points = card1.rank + card2.rank + card3.rank
-        if (winningCard.suit == trump) {
-            if (card2.suit == trump && card2.rank > winningCard.rank) {
-                winningCard = card2
-            }
-            if (card3.suit == trump && card3.rank > winningCard.rank) {
-                winningCard = card3
-            }
-        }
-        else {
-            when (card2.suit) {
-                trump -> winningCard = card2
-                winningCard.suit -> {
-                    if (card2.rank > winningCard.rank) {
-                        winningCard = card2
-                    }
-                }
-            }
-            when (card3.suit) {
-                trump -> {
-                    if (winningCard.suit != trump || winningCard.suit < card3.suit)
-                        winningCard = card3
-                }
-                winningCard.suit -> {
-                    if (card3.rank > winningCard.rank) {
-                        winningCard = card3
-                    }
-                }
-            }
-        }
-        if (winningCard == card2) {lastTrick = leftPlayer}
-        if (winningCard == card3) {lastTrick = rightPlayer}
-        lastTrick.currentScore += points
-        numberOfMotions++
-
-        print("Текущий счет: ")
-        leftPlayer = leftPlayer(lastTrick)
-        rightPlayer = rightPlayer(lastTrick)
-        lastTrick.printScores(lastTrick.currentScore)
-        leftPlayer.printScores(leftPlayer.currentScore)
-        rightPlayer.printScores(rightPlayer.currentScore)
-        println("|\n")
+    private fun clearAll() {
+        println("_________________________________________________________________________\n")
+        activePlayer.obligation = 0
+        activePlayer.currentScore  = 0
+        leftPlayer(activePlayer).currentScore  = 0
+        rightPlayer(activePlayer).currentScore = 0
+        activePlayer.firstCardNumber = 0
+        activePlayer.secondCardNumber = 1
+        inaccessibleCards = ArrayList()
+        activePlayer.handCards  = ArrayList()
+        leftPlayer(activePlayer).handCards  = ArrayList()
+        rightPlayer(activePlayer).handCards = ArrayList()
+        activePlayer.pass  = false
+        leftPlayer(activePlayer).pass  = false
+        rightPlayer(activePlayer).pass = false
+        numberOfMotions = 0
+        trump = null
     }
 
     private fun shuffle() : Array<Card> {
@@ -389,10 +204,14 @@ internal object Game {
         }
         val startCard = 21
         talon = Array(3, {i -> shuffledCards[i + startCard]})
-
         HumanPlayer.handCards = sortBySuits(HumanPlayer.handCards)
         ComputerPlayer1.handCards = sortBySuits(ComputerPlayer1.handCards)
         ComputerPlayer2.handCards = sortBySuits(ComputerPlayer2.handCards)
+        print("\nComputer Lisa Cards: ")
+        printCards(ComputerPlayer1.handCards)
+        print("\n\nComputer Polina Cards: ")
+        printCards(ComputerPlayer2.handCards)
+        println()
     }
 
     internal fun sortBySuits(handC : ArrayList<Card>) : ArrayList<Card> {
@@ -437,6 +256,53 @@ internal object Game {
         return sortedCards
     }
 
+    private fun playerCardChecking() : Boolean {
+        if (activePlayer.firstRetakeChecking()) { return true }
+        if (leftPlayer(activePlayer).firstRetakeChecking()) { return true }
+        if (rightPlayer(activePlayer).firstRetakeChecking()) { return true }
+        return false
+    }
+
+
+    private fun bidding() {
+        var bid = 100
+        activePlayer.obligation = bid
+        println("${activePlayer.name}: 100\n")
+        activePlayer = leftPlayer(activePlayer)
+        while (!(leftPlayer(activePlayer).pass && rightPlayer(activePlayer).pass)){
+            if (!activePlayer.pass) {
+                var newBid = activePlayer.askObligation(bid)
+                if (newBid > bid) {
+                    bid = newBid
+                    println("${activePlayer.name}: $bid\n")
+                    activePlayer.obligation = bid
+                }
+                else {
+                    activePlayer.pass = true
+                    activePlayer.obligation = 0
+                    println("${activePlayer.name}: Пас\n")
+                }
+            }
+            activePlayer = leftPlayer(activePlayer)
+        }
+        if (activePlayer.pass) { activePlayer = leftPlayer(activePlayer) }
+    }
+
+    private fun showTalon() {
+        val showTalon : ArrayList<Card> = ArrayList()
+        print("Прикуп: ")
+        for (i in 0..talon.size - 1) {
+            showTalon.add(talon[i])
+        }
+        printCards(showTalon)
+        println("\n")
+    }
+
+    private fun talonChecking() : Boolean {
+        if (activePlayer.talonRetakeChecking()) { return true }
+        return false
+    }
+
     private fun getTalon() {
         for (i in 0..talon.size - 1) {
             activePlayer.handCards.add(talon[i])
@@ -444,96 +310,161 @@ internal object Game {
         activePlayer.handCards = sortBySuits(activePlayer.handCards)
     }
 
-    private fun reviewNines(player : Player) : Boolean {
-        var counter9 = 0
-        for (i in player.handCards) {
-            if (i.rank == 9) {
-                counter9++
+    private fun pointsDivision() : Boolean {
+        val points = 60
+        val leftPlayer = leftPlayer(activePlayer)
+        val rightPlayer = rightPlayer(activePlayer)
+        if (activePlayer.askPointsDivision()) {
+            if (!leftPlayer.onBarrel) {
+                leftPlayer.totalScore += points
             }
-        }
-        if (counter9 == 4) {
+            else { leftPlayer.barrelBolts++ }
+            if (!rightPlayer.onBarrel) {
+                rightPlayer.totalScore += points
+            }
+            else { rightPlayer.barrelBolts++ }
+            activePlayer.totalScore  -= activePlayer.obligation
+            print("  Общий счет: ")
+            HumanPlayer.printScores(HumanPlayer.totalScore, true)
+            ComputerPlayer1.printScores(ComputerPlayer1.totalScore, true)
+            ComputerPlayer2.printScores(ComputerPlayer2.totalScore, true)
+            println("\n")
             return true
         }
         return false
     }
 
-    private fun review14(player : Player) : Boolean {
-        var ranksSum = 0
-        for (i in player.handCards) {
-            ranksSum += i.rank
-        }
-        if (ranksSum < 14) {return true}
-
-        return false
-    }
-
-    private fun firstRetakeChecking() : Boolean {
-        if (reviewNines(HumanPlayer)) {
-            println ("У вас на руках четыре девятки. Хотите пересдать карты? Д/Н")
-            return HumanPlayer.humanInput()
-        }
-        if (review14(HumanPlayer)) {
-            println ("У вас на руках сумма карт меньше 14. Хотите пересдать карты? Д/Н")
-            return HumanPlayer.humanInput()
-        }
-        var player : Player? = null
-        var text : String = ""
-        if (reviewNines(ComputerPlayer1)) {
-            player = ComputerPlayer1
-            text = "У меня на руках четыре девятки. Карты будут пересданы\n"
-            return true
-        }
-        if (reviewNines(ComputerPlayer2)) {
-            player = ComputerPlayer2
-            text = "У меня на руках четыре девятки. Карты будут пересданы\n"
-            return true
-        }
-        if (review14(ComputerPlayer1)) {
-            player = ComputerPlayer1
-            text = "У меня на руках сумма карт меньше 14. Карты будут пересданы\n"
-            return true
-        }
-        if (review14(ComputerPlayer2)) {
-            player = ComputerPlayer2
-            text = "У меня на руках сумма карт меньше 14. Карты будут пересданы\n"
-            return true
-        }
-        if (player != null) { println ("$player: $text") }
-        return false
-        // если у компьютера есть возможность пересдать карты - он обязательно это делает
-        // если кто-то захотел пересдать - показать его карты и написать причину
-    }
-
-    private fun taloneRetakeChecking() {
-        var talonRankSum = 0
-        var counter9 = 0
-        for (i in talon) {
-            talonRankSum += i.rank
-            if (i.rank == 0) {
-                counter9++
-            }
-        }
-        if (talonRankSum < 5) {
-            if (activePlayer == HumanPlayer) {
-                println ("Сумма очков прикупа меньше 5. Хотите пересдать карты? Д/Н")
-                HumanPlayer.humanInput()
-            }
-            else {
-                println ("${activePlayer.name}: Сумма очков прикупа меньше 5. Карты будут пересданы\n")
-                startSimpleGame()
-            }
-        }
-        if (counter9 > 1) {
-            if (activePlayer == HumanPlayer) {
-                println ("Две девятки в прикупе. Хотите пересдать карты? Д/Н")
-                HumanPlayer.humanInput()
-            }
-            else {
-                println ("${activePlayer.name}: Две девятки в прикупе. Карты будут пересданы\n")
-                startSimpleGame()
+    internal fun printCards(cards : ArrayList<Card>) {
+        print("| ")
+        for (i in 0..cards.size - 1) {
+            print("${cards[i].name}")
+            when (cards[i].suit) {
+                's' -> { print("♠ | ") }
+                'c' -> { print("♣ | ") }
+                'd' -> { print("♦ | ") }
+                'h' -> { print("♥ | ") }
             }
         }
     }
+
+    internal fun conclusion() {
+        val leftPlayer = leftPlayer(activePlayer)
+        val rightPlayer = rightPlayer(activePlayer)
+        if (activePlayer.currentScore < activePlayer.obligation) {
+            activePlayer.totalScore -= activePlayer.obligation
+            activePlayer.clearBarrel()
+        } else {
+            //будем считать, что игроку на бочке не разрешается идти меньше, чем на 120
+            activePlayer.totalScore += activePlayer.obligation
+        }
+        if (!leftPlayer.onBarrel) {
+            leftPlayer.totalScore += leftPlayer.currentScore
+        }
+        else {
+            leftPlayer.barrelBolts++
+        }
+        if (!rightPlayer.onBarrel) {
+            rightPlayer.totalScore += rightPlayer.currentScore
+        }
+        else {
+            rightPlayer.barrelBolts++
+        }
+        activePlayer.imposeFines()
+        leftPlayer.imposeFines()
+        rightPlayer.imposeFines()
+        print("  Общий счет: ")
+        HumanPlayer.printScores(HumanPlayer.totalScore, true)
+        ComputerPlayer1.printScores(ComputerPlayer1.totalScore, true)
+        ComputerPlayer2.printScores(ComputerPlayer2.totalScore, true)
+        println("|\n")
+        firstHand = leftPlayer(firstHand)
+    }
+
+    internal fun comparison() {
+        var leftPlayer = leftPlayer(lastTrick)
+        var rightPlayer = rightPlayer(lastTrick)
+        var card1 = lastTrick.activeClick()
+        print("\n${lastTrick.name}: ")
+        if ((card1.rank == 3 || card1.rank == 4) && numberOfMotions != 0) {
+            for (i in lastTrick.handCards) {
+                if ((i.rank == 4 || i.rank == 3) && i.suit == card1.suit) {
+                    print("Козырь ")
+                    trump = card1.suit
+                    var toAdd = 0
+                    when (card1.suit) {
+                        's' -> toAdd = 40
+                        'c' -> toAdd = 60
+                        'd' -> toAdd = 80
+                        'h' -> toAdd = 100
+                    }
+                    lastTrick.currentScore += toAdd
+                    break
+                }
+            }
+        }
+        printCards(arrayListOf(card1))
+        println("\n")
+        val card2 = leftPlayer.passiveClick()
+        print("${leftPlayer.name}: ")
+        printCards(arrayListOf(card2))
+        println("\n")
+        val card3 = rightPlayer.passiveClick()
+        print("${rightPlayer.name}: ")
+        printCards(arrayListOf(card3))
+        println("\n")
+
+        inaccessibleCards.add(card1)
+        inaccessibleCards.add(card2)
+        inaccessibleCards.add(card3)
+        var winningCard = card1
+        val points = card1.rank + card2.rank + card3.rank
+        if (winningCard.suit == trump) {
+            if (card2.suit == trump && card2.rank > winningCard.rank) {
+                winningCard = card2
+            }
+            if (card3.suit == trump && card3.rank > winningCard.rank) {
+                winningCard = card3
+            }
+        }
+        else {
+            when (card2.suit) {
+                trump -> winningCard = card2
+                winningCard.suit -> {
+                    if (card2.rank > winningCard.rank) {
+                        winningCard = card2
+                    }
+                }
+            }
+            when (card3.suit) {
+                trump -> {
+                    if (winningCard.suit != trump || winningCard.rank < card3.rank)
+                        winningCard = card3
+                }
+                winningCard.suit -> {
+                    if (card3.rank > winningCard.rank) {
+                        winningCard = card3
+                    }
+                }
+            }
+        }
+        if (winningCard == card2) {
+            lastTrick = leftPlayer
+        }
+        if (winningCard == card3) {
+            lastTrick = rightPlayer
+        }
+        lastTrick.currentScore += points
+        numberOfMotions++
+        println("_________________________________________________________________________\n")
+        print("Текущий счет: ")
+        HumanPlayer.printScores(HumanPlayer.currentScore, false)
+        ComputerPlayer1.printScores(ComputerPlayer1.currentScore, false)
+        ComputerPlayer2.printScores(ComputerPlayer2.currentScore, false)
+        println("|")
+        println("_________________________________________________________________________\n")
+    }
+
+    internal var inaccessibleCards : ArrayList<Card> = ArrayList()
 }
 
 //перемешали!; раздали! (если что - пересдали!); торги (проверка на наличие марьяжа!);
@@ -578,3 +509,7 @@ internal object Game {
 //               г) 2 девятки в прикупе        (после открытия прикупа - перед взятием карт активным игроком)
 //               д) 4 девятки на руках         (после сброса карт)
 //4 - роспись по 60 очков оппонентам, у активного вычитается столько, сколько заявил на торгах
+
+//после выбора ставки предлагает выбрать карты для сноса??????????
+//что-то не то с колодой (с разделением карт)
+//по 1 карте на руках и конец игры

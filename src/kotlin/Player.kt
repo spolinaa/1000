@@ -28,8 +28,9 @@ abstract public class Player() {
     abstract protected fun askPlayerToRaise(nextBid : Int) : Int
     abstract protected fun chooseCardsToGive()
 
-    internal fun printScores(score : Int) {
+    internal fun printScores(score : Int, bolt : Boolean) {
         print("| $name: $score ")
+        if (bolt) { for (i in 1..bolts) { print("⊥ ") } }
     }
 
     internal fun askObligation(bid : Int) : Int {
@@ -38,7 +39,7 @@ abstract public class Player() {
         val nextBid = bid + step
         if (maxSum < nextBid) { return 0 }
         if (askPlayerToRaise(nextBid) == 0) { return 0 }
-        obligation = nextBid
+        //obligation = nextBid
         return nextBid
     }
 
@@ -70,30 +71,66 @@ abstract public class Player() {
 
     internal fun haveMarriage() : ArrayList<Char> {
         var res : ArrayList<Char> = ArrayList()
-        var counter = Array(4, { 0 })
-        for (i in 0..handCards.size - 1) {
-            if (handCards[i].rank == 4 || handCards[i].rank == 3) {
-                when (handCards[i].suit) {
-                    's' -> {
-                        if (counter[0] > 0) { res.add(handCards[i].suit) }
-                        counter[0]++
-                    }
-                    'c' -> {
-                        if (counter[1] > 0) { res.add(handCards[i].suit) }
-                        counter[1]++
-                    }
-                    'd' -> {
-                        if (counter[2] > 0) { res.add(handCards[i].suit) }
-                        counter[2]++
-                    }
-                    'h' -> {
-                        if (counter[3] > 0) { res.add(handCards[i].suit) }
-                        counter[3]++
-                    }
-                }
-            }
+        for (i in Game.suits) {
+            val queen = Card(i, 3).containsIn(handCards)
+            val king = Card(i, 4).containsIn(handCards)
+            if (king && queen) { res.add(i) }
         }
         return res
+    }
+
+    private fun review4Nines() : Boolean {
+        var counter9 = 0
+        for (i in handCards) {
+            if (i.rank == 9) {
+                counter9++
+            }
+        }
+        if (counter9 == 4) {
+            return true
+        }
+        return false
+    }
+
+    private fun reviewSum14() : Boolean {
+        var ranksSum = 0
+        for (i in handCards) {
+            ranksSum += i.rank
+        }
+        if (ranksSum < 14) { return true }
+        return false
+    }
+
+    private fun reviewTalonSum5() : Boolean {
+        var talonRankSum = 0
+        for (i in Game.talon) {
+            talonRankSum += i.rank
+        }
+        if (talonRankSum < 5) { return true }
+        return false
+    }
+
+    private fun reviewTalon2Nines() : Boolean {
+        var counter9 = 0
+        for (i in Game.talon) {
+            if (i.rank == 0) { counter9++ }
+        }
+        if (counter9 > 1) { return true }
+        return false
+    }
+
+    abstract protected fun askToRetake(a : Int) : Boolean
+
+    internal fun firstRetakeChecking() : Boolean {
+        if (reviewSum14()) { return askToRetake(14) }
+        else if (review4Nines()) { return askToRetake(49) }
+        return false
+    }
+
+    internal fun talonRetakeChecking() : Boolean {
+        if (reviewTalon2Nines()) { return askToRetake(29) }
+        else if (reviewTalonSum5()) { return askToRetake(5) }
+        return false
     }
 
     protected fun availableCards() : ArrayList<Card> {
@@ -113,7 +150,7 @@ abstract public class Player() {
         if (availabCards.size == 0) {
             availabCards = handCards
         }
-        return availabCards
+        return Game.sortBySuits(availabCards)
     }
 
     internal fun imposeFines() {

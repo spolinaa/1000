@@ -22,14 +22,14 @@ public class Human() : Player() {
     override internal fun passiveClick() : Card = click(availableCards())
 
     private fun click(cards : ArrayList<Card>) : Card {
-        print("Доступные для хода карты: ")
+        print("                         Доступные для хода карты: ")
         Game.printCards(cards)
         println("\n")
         println("Ваш ход: ")
         val args = getArgs(cards.size - 1)
         val card = cards[args]
         handCards.remove(card)
-        Computer().inaccessibleCards.add(card)
+        println()
         return card
     }
 
@@ -42,6 +42,28 @@ public class Human() : Player() {
         println("$nextBid? Д/Н")
         if (!humanInput()) { return 0 }
         return nextBid
+    }
+
+    override protected fun askToRetake(a : Int) : Boolean {
+        when (a) {
+            5  -> {
+                println ("Сумма очков прикупа меньше 5. Хотите пересдать карты? Д/Н")
+                return humanInput()
+            }
+            14 -> {
+                println ("У вас на руках сумма карт меньше 14. Хотите пересдать карты? Д/Н")
+                return humanInput()
+            }
+            29 -> {
+                println ("Две девятки в прикупе. Хотите пересдать карты? Д/Н")
+                return humanInput()
+            }
+            49 -> {
+                println ("У вас на руках четыре девятки. Хотите пересдать карты? Д/Н")
+                return humanInput()
+            }
+        }
+        return false
     }
 
     override internal fun finalObligation() {

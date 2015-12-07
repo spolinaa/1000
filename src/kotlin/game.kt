@@ -211,11 +211,11 @@ internal object Game {
         HumanPlayer.handCards = sortBySuits(HumanPlayer.handCards)
         ComputerPlayer1.handCards = sortBySuits(ComputerPlayer1.handCards)
         ComputerPlayer2.handCards = sortBySuits(ComputerPlayer2.handCards)
-        print("\nComputer Lisa Cards: ")
+        /*print("\nComputer Lisa Cards: ")
         printCards(ComputerPlayer1.handCards)
         print("\n\nComputer Polina Cards: ")
         printCards(ComputerPlayer2.handCards)
-        println("\n")
+        println("\n") */
     }
 
     internal fun sortBySuits(handC : ArrayList<Card>) : ArrayList<Card> {
@@ -336,12 +336,11 @@ internal object Game {
             }
             else { rightPlayer.barrelBolts++ }
             activePlayer.totalScore  -= activePlayer.obligation
-            println("_________________________________________________________________________\n")
             print("  Общий счет: ")
             HumanPlayer.printScores(HumanPlayer.totalScore, true)
             ComputerPlayer1.printScores(ComputerPlayer1.totalScore, true)
             ComputerPlayer2.printScores(ComputerPlayer2.totalScore, true)
-            println("\n")
+            println()
             return true
         }
         return false
@@ -367,7 +366,6 @@ internal object Game {
             activePlayer.totalScore -= activePlayer.obligation
             activePlayer.clearBarrel()
         } else {
-            //будем считать, что игроку на бочке не разрешается идти меньше, чем на 120
             activePlayer.totalScore += activePlayer.obligation
         }
         if (!leftPlayer.onBarrel) {
@@ -395,11 +393,6 @@ internal object Game {
         activePlayer.imposeFines()
         leftPlayer.imposeFines()
         rightPlayer.imposeFines()
-        print("  Общий счет: ")
-        HumanPlayer.printScores(HumanPlayer.totalScore, true)
-        ComputerPlayer1.printScores(ComputerPlayer1.totalScore, true)
-        ComputerPlayer2.printScores(ComputerPlayer2.totalScore, true)
-        println("|\n")
         firstHand = leftPlayer(firstHand)
     }
 

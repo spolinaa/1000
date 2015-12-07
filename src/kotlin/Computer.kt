@@ -17,7 +17,7 @@ public class Computer() : Player() {
     override internal fun askPointsDivision() : Boolean {
         sum = cardAnalysis()
         val c = 20
-        if (sum + c < obligation) {
+        if (sum + c < obligation || goodCards.size == 1) {
             println("$name: Распишем\n")
             return true
         }
@@ -26,14 +26,12 @@ public class Computer() : Player() {
 
     override protected fun askPlayerToRaise(nextBid : Int) : Int {
         sum = cardAnalysis() + 5
-        if (sum < nextBid) { return 0 }
+        if (sum < nextBid || goodCards.size == 0) { return 0 }
         return sum
     }
 
     override internal fun finalObligation() {
-        if (obligation < sum) {
-            obligation = (sum div 5) * 5
-        }
+        if (obligation < sum) { obligation = (sum div 5) * 5 }
         println("$name: Иду на $obligation")
     }
 
@@ -159,7 +157,10 @@ public class Computer() : Player() {
         var notInGoodCards : ArrayList<Card> = badCards
         val sizeMarriage = arrayOfMarriages.size
         if (sizeMarriage > 0) {
-            marriagesToUse(sizeMarriage - 1)
+            for (i in 0..sizeMarriage - 1) {
+                if (!marriagesToUse(i)) { break }
+            }
+
             sumRank += sum
         }
         else { Game.sortBySuits(goodCards) }
@@ -218,7 +219,7 @@ public class Computer() : Player() {
 
 
 
-    private fun marriagesToUse(last : Int) {
+    private fun marriagesToUse(last : Int) : Boolean {
         val kingRank  = 4
         val queenRank = 3
         val suit = arrayOfMarriages[last]
@@ -234,8 +235,9 @@ public class Computer() : Player() {
             kings.add(king)
             badCards = king.removeFrom(badCards)
             badCards = queen.removeFrom(badCards)
+            return false
         }
-        if (last - 1 >= 0) { marriagesToUse(last - 1) }
+        return true
     }
 
     private fun inaccessibleTrumpCards() : Boolean {
@@ -264,10 +266,16 @@ public class Computer() : Player() {
                 }
             }
             if (rank == 12) {
-                if (!inaccessibleTrumpCards() || goodSize == 0) { card = findBadCardToTurn() }
+                if (kings.size > 0) {
+                    card = kings[kings.size - 1]
+                    kings = card.removeFrom(kings)
+                }
                 else {
-                    card = goodCards[0]
-                    goodCards = card.removeFrom(goodCards)
+                    if (goodSize > 0) {
+                        card = goodCards[0]
+                        goodCards = card.removeFrom(goodCards)
+                    }
+                    else { card = findBadCardToTurn() }
                 }
             }
         }
@@ -275,7 +283,14 @@ public class Computer() : Player() {
             if (goodSize > 0) {
                 card = goodCards[0]
                 goodCards = card.removeFrom(goodCards)
-            } else { card = findBadCardToTurn() }
+            }
+            else {
+                if (kings.size > 0) {
+                    card = kings[kings.size - 1]
+                    kings = card.removeFrom(kings)
+                }
+                else { card = findBadCardToTurn() }
+            }
         }
         handCards = card.removeFrom(handCards)
         return card
@@ -283,26 +298,20 @@ public class Computer() : Player() {
 
     private fun findBadCardToTurn() : Card {
         var card = Card(' ', 0)
-        if (kings.size > 0) {
-            card = kings[kings.size - 1]
-            kings = card.removeFrom(kings)
-        }
-        else {
-            val badSize = badCards.size
-            when (badSize) {
-                0 -> {
-                    for (i in handCards) {
-                        if (i.suit != Game.trump) { card = i; break }
-                    }
+        val badSize = badCards.size
+        when (badSize) {
+            0 -> {
+                for (i in handCards) {
+                    if (i.suit != Game.trump) { card = i; break }
                 }
-                1 -> {
-                    card = badCards[0]; badCards = card.removeFrom(badCards)
-                }
-                else -> {
-                    findLowCards(badCards)
-                    card = handCards[secondCardNumber]
-                    badCards = card.removeFrom(badCards)
-                }
+            }
+            1 -> {
+                card = badCards[0]; badCards = card.removeFrom(badCards)
+            }
+            else -> {
+                findLowCards(badCards)
+                card = handCards[secondCardNumber]
+                badCards = card.removeFrom(badCards)
             }
         }
         return card

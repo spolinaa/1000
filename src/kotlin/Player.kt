@@ -19,6 +19,7 @@ abstract public class Player() {
     internal var climbDownFromBarrel = 0
     internal var firstCardNumber = 0
     internal var secondCardNumber = 1
+    internal var currentBolt = false
 
     abstract internal fun finalObligation()
     abstract internal fun activeClick() : Card
@@ -30,9 +31,20 @@ abstract public class Player() {
 
     internal fun printScores(score : Int, bolt : Boolean) {
         print("| $name: $score ")
-        if (bolt) { for (i in 1..bolts) { print("⊥ ") } }
+        if (currentBolt && bolt) { print("⊥ "); currentBolt = false }
     }
 
+    internal fun roundScore() {
+        val mod = currentScore mod 5
+        when {
+            (mod < 3) -> {
+                currentScore = (currentScore div 5) * 5
+            }
+            else -> {
+                currentScore = (currentScore div 5) * 5 + 5
+            }
+        }
+    }
     internal fun askObligation(bid : Int) : Int {
         val maxSum = sumWithMarriage()
         val step = 5
@@ -48,8 +60,8 @@ abstract public class Player() {
         arrayOfMarriages = haveMarriage()
         val size = arrayOfMarriages.size
         if (size == 0) { return sum }
-        for (i in 0..size - 1) {
-            when (arrayOfMarriages[i]) {
+        for (i in arrayOfMarriages) {
+            when (i) {
                 's' -> { sum += 40  }
                 'c' -> { sum += 60  }
                 'd' -> { sum += 80  }
@@ -158,7 +170,7 @@ abstract public class Player() {
         when (totalScore) {
             555, -555 -> { totalScore = 0 }
         }
-        if (bolts == 3) { bolts = 0; totalScore -= fine }
+        if (bolts == 3) { bolts = 0; totalScore -= fine; currentBolt = false }
         if (barrelBolts == 3) { barrelBolts = 0; totalScore -= fine }
         if (climbDownFromBarrel == 3) { climbDownFromBarrel = 0; totalScore -= fine }
     }

@@ -22,7 +22,7 @@ public class Human() : Player() {
     override internal fun passiveClick() : Card = click(availableCards())
 
     private fun click(cards : ArrayList<Card>) : Card {
-        print("                         Доступные для хода карты: ")
+        print("\n\n                                   Доступные для хода карты: ")
         Game.printCards(cards)
         println("\n")
         println("Ваш ход: ")

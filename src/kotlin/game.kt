@@ -92,7 +92,7 @@ internal object Game {
                 rightPlayer(firstHand).totalScore = 760
                 rightPlayer(firstHand).clearBarrel()
             }
-            else {onBound = rightPlayer(firstHand)}
+            else { onBound = rightPlayer(firstHand) }
             boundCounter++
         }
         if (boundCounter > 1) {
@@ -104,6 +104,11 @@ internal object Game {
             barrel = onBound
             onBound?.onBarrel = true
         }
+        print("  Общий счет: ")
+        HumanPlayer.printScores(HumanPlayer.totalScore, true)
+        ComputerPlayer1.printScores(ComputerPlayer1.totalScore, true)
+        ComputerPlayer2.printScores(ComputerPlayer2.totalScore, true)
+        println("|\n")
     }
 
     private fun simpleGame() {
@@ -113,7 +118,6 @@ internal object Game {
             comparison()
         }
         conclusion()
-        firstHand = leftPlayer(firstHand)
     }
 
     public fun startSimpleGame() : Boolean {
@@ -211,7 +215,7 @@ internal object Game {
         printCards(ComputerPlayer1.handCards)
         print("\n\nComputer Polina Cards: ")
         printCards(ComputerPlayer2.handCards)
-        println()
+        println("\n")
     }
 
     internal fun sortBySuits(handC : ArrayList<Card>) : ArrayList<Card> {
@@ -266,12 +270,17 @@ internal object Game {
 
     private fun bidding() {
         var bid = 100
+        if (activePlayer.onBarrel) { bid = 120 }
         activePlayer.obligation = bid
-        println("${activePlayer.name}: 100\n")
+        println("${activePlayer.name}: $bid\n")
         activePlayer = leftPlayer(activePlayer)
         while (!(leftPlayer(activePlayer).pass && rightPlayer(activePlayer).pass)){
             if (!activePlayer.pass) {
-                var newBid = activePlayer.askObligation(bid)
+                var newBid : Int
+                if (activePlayer.onBarrel) {
+                    newBid = activePlayer.askObligation(Math.max(115, bid))
+                }
+                else { newBid = activePlayer.askObligation(bid) }
                 if (newBid > bid) {
                     bid = newBid
                     println("${activePlayer.name}: $bid\n")
@@ -314,6 +323,9 @@ internal object Game {
         val points = 60
         val leftPlayer = leftPlayer(activePlayer)
         val rightPlayer = rightPlayer(activePlayer)
+        if (activePlayer.onBarrel || leftPlayer.onBarrel || rightPlayer.onBarrel) {
+            return false
+        }
         if (activePlayer.askPointsDivision()) {
             if (!leftPlayer.onBarrel) {
                 leftPlayer.totalScore += points
@@ -324,6 +336,7 @@ internal object Game {
             }
             else { rightPlayer.barrelBolts++ }
             activePlayer.totalScore  -= activePlayer.obligation
+            println("_________________________________________________________________________\n")
             print("  Общий счет: ")
             HumanPlayer.printScores(HumanPlayer.totalScore, true)
             ComputerPlayer1.printScores(ComputerPlayer1.totalScore, true)
@@ -358,12 +371,22 @@ internal object Game {
             activePlayer.totalScore += activePlayer.obligation
         }
         if (!leftPlayer.onBarrel) {
+            if (leftPlayer.currentScore == 0) {
+                leftPlayer.bolts++
+                leftPlayer.currentBolt = true
+            }
+            leftPlayer.roundScore()
             leftPlayer.totalScore += leftPlayer.currentScore
         }
         else {
             leftPlayer.barrelBolts++
         }
         if (!rightPlayer.onBarrel) {
+            if (rightPlayer.currentScore == 0) {
+                rightPlayer.bolts++
+                rightPlayer.currentBolt = true
+            }
+            rightPlayer.roundScore()
             rightPlayer.totalScore += rightPlayer.currentScore
         }
         else {
@@ -384,6 +407,7 @@ internal object Game {
         var leftPlayer = leftPlayer(lastTrick)
         var rightPlayer = rightPlayer(lastTrick)
         var card1 = lastTrick.activeClick()
+        activeSuit = card1.suit
         print("\n${lastTrick.name}: ")
         if ((card1.rank == 3 || card1.rank == 4) && numberOfMotions != 0) {
             for (i in lastTrick.handCards) {
@@ -403,16 +427,13 @@ internal object Game {
             }
         }
         printCards(arrayListOf(card1))
-        println("\n")
         val card2 = leftPlayer.passiveClick()
-        print("${leftPlayer.name}: ")
+        print(" ${leftPlayer.name}: ")
         printCards(arrayListOf(card2))
-        println("\n")
         val card3 = rightPlayer.passiveClick()
-        print("${rightPlayer.name}: ")
+        print(" ${rightPlayer.name}: ")
         printCards(arrayListOf(card3))
-        println("\n")
-
+        println()
         inaccessibleCards.add(card1)
         inaccessibleCards.add(card2)
         inaccessibleCards.add(card3)

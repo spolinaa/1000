@@ -285,7 +285,7 @@ public class Computer() : Player() {
                 goodCards = card.removeFrom(goodCards)
             }
             else {
-                if (kings.size > 0) {
+                if (kings.size > 0 && Game.numberOfMotions > 0) {
                     card = kings[kings.size - 1]
                     kings = card.removeFrom(kings)
                 }

@@ -20,6 +20,7 @@ abstract public class Player() {
     internal var firstCardNumber = 0
     internal var secondCardNumber = 1
     internal var currentBolt = false
+    internal var win = false
 
     abstract internal fun finalObligation()
     abstract internal fun activeClick() : Card
@@ -29,9 +30,25 @@ abstract public class Player() {
     abstract protected fun askPlayerToRaise(nextBid : Int) : Int
     abstract protected fun chooseCardsToGive()
 
+    internal fun clearAll() {
+        obligation = 0
+        currentScore  = 0
+        firstCardNumber = 0
+        secondCardNumber = 1
+        handCards  = ArrayList()
+        pass  = false
+    }
+
+    internal fun isWinner() {
+        if (win) { println("Победитель: $name") }
+    }
+
+
     internal fun printScores(score : Int, bolt : Boolean) {
+        if (score >= 1000) { win = true }
         print("| $name: $score ")
         if (currentBolt && bolt) { print("⊥ "); currentBolt = false }
+        for (i in 1..barrelBolts) { print("- ") }
     }
 
     internal fun roundScore() {
@@ -171,13 +188,36 @@ abstract public class Player() {
             555, -555 -> { totalScore = 0 }
         }
         if (bolts == 3) { bolts = 0; totalScore -= fine; currentBolt = false }
-        if (barrelBolts == 3) { barrelBolts = 0; totalScore -= fine }
-        if (climbDownFromBarrel == 3) { climbDownFromBarrel = 0; totalScore -= fine }
+        if (barrelBolts == 3) { clearBarrel(); totalScore -= fine }
+        if (climbDownFromBarrel == 3) {
+            clearBarrel()
+            climbDownFromBarrel = 0
+            totalScore -= fine
+        }
     }
 
     internal fun clearBarrel() {
         barrelBolts = 0
         climbDownFromBarrel++
         onBarrel = false
+    }
+
+    internal fun tryToClimb() : Int {
+        if (totalScore >= 880) {
+            if (Game.barrel != null) {
+                totalScore = 880
+                onBarrel = true
+                Game.barrel?.clearBarrel()
+                Game.barrel?.onBarrel = false
+                Game.barrel?.totalScore = 760
+            }
+            else {
+                totalScore = 880
+                onBarrel = true
+            }
+            Game.barrel = this
+            return 1
+        }
+        return 0
     }
 }

@@ -23,7 +23,7 @@ internal object Game {
     internal var lastTrick : Player = firstHand
     internal var trump : Char? = null
     internal var activeSuit = ' '
-    private var numberOfMotions = 0
+    internal var numberOfMotions = 0
 
     internal var barrel : Player? = null
 
@@ -64,46 +64,27 @@ internal object Game {
             gameOnBounds()
             if (!startSimpleGame()) { simpleGame() }
         }
+        print("  Общий счет: ")
+        HumanPlayer.printScores(HumanPlayer.totalScore, true)
+        ComputerPlayer1.printScores(ComputerPlayer1.totalScore, true)
+        ComputerPlayer2.printScores(ComputerPlayer2.totalScore, true)
+        HumanPlayer.isWinner()
+        ComputerPlayer1.isWinner()
+        ComputerPlayer2.isWinner()
+        println("|\n")
     }
 
 
     private fun gameOnBounds() {
-        var onBound : Player? = null
-        var boundCounter = 0
-        if (firstHand.totalScore >= 880) {
-            firstHand.totalScore = 880
-            onBound = firstHand
-            boundCounter++
-        }
-        if (leftPlayer(firstHand).totalScore >= 880) {
-            leftPlayer(firstHand).totalScore = 880
-            boundCounter++
-            if (onBound != null) {
-                onBound.totalScore = 760
-                leftPlayer(firstHand).totalScore = 760
-                rightPlayer(firstHand).clearBarrel()
-            }
-            else {onBound = leftPlayer(firstHand)}
-        }
-        if (rightPlayer(firstHand).totalScore >= 880) {
-            rightPlayer(firstHand).totalScore = 880
-            if (onBound != null) {
-                onBound.totalScore = 760
-                rightPlayer(firstHand).totalScore = 760
-                rightPlayer(firstHand).clearBarrel()
-            }
-            else { onBound = rightPlayer(firstHand) }
-            boundCounter++
-        }
-        if (boundCounter > 1) {
-            barrel?.clearBarrel()
-        }
-        if (boundCounter == 1) {
-            barrel?.clearBarrel()
+
+        val count = HumanPlayer.tryToClimb() + ComputerPlayer1.tryToClimb() + ComputerPlayer2.tryToClimb()
+        if (count > 1) {
+            barrel?.totalScore = 760
             barrel?.onBarrel = false
-            barrel = onBound
-            onBound?.onBarrel = true
+            barrel?.clearBarrel()
+            barrel = null
         }
+
         print("  Общий счет: ")
         HumanPlayer.printScores(HumanPlayer.totalScore, true)
         ComputerPlayer1.printScores(ComputerPlayer1.totalScore, true)
@@ -156,19 +137,12 @@ internal object Game {
 
     private fun clearAll() {
         println("_________________________________________________________________________\n")
-        activePlayer.obligation = 0
-        activePlayer.currentScore  = 0
-        leftPlayer(activePlayer).currentScore  = 0
-        rightPlayer(activePlayer).currentScore = 0
-        activePlayer.firstCardNumber = 0
-        activePlayer.secondCardNumber = 1
+        val leftPlayer = leftPlayer(activePlayer)
+        val rightPlayer = rightPlayer(activePlayer)
+        activePlayer.clearAll()
+        leftPlayer.clearAll()
+        rightPlayer.clearAll()
         inaccessibleCards = ArrayList()
-        activePlayer.handCards  = ArrayList()
-        leftPlayer(activePlayer).handCards  = ArrayList()
-        rightPlayer(activePlayer).handCards = ArrayList()
-        activePlayer.pass  = false
-        leftPlayer(activePlayer).pass  = false
-        rightPlayer(activePlayer).pass = false
         numberOfMotions = 0
         trump = null
     }
@@ -215,7 +189,7 @@ internal object Game {
         printCards(ComputerPlayer1.handCards)
         print("\n\nComputer Polina Cards: ")
         printCards(ComputerPlayer2.handCards)
-        println("\n") */
+        println("\n")*/
     }
 
     internal fun sortBySuits(handC : ArrayList<Card>) : ArrayList<Card> {
@@ -336,11 +310,6 @@ internal object Game {
             }
             else { rightPlayer.barrelBolts++ }
             activePlayer.totalScore  -= activePlayer.obligation
-            print("  Общий счет: ")
-            HumanPlayer.printScores(HumanPlayer.totalScore, true)
-            ComputerPlayer1.printScores(ComputerPlayer1.totalScore, true)
-            ComputerPlayer2.printScores(ComputerPlayer2.totalScore, true)
-            println()
             return true
         }
         return false
@@ -363,8 +332,8 @@ internal object Game {
         val leftPlayer = leftPlayer(activePlayer)
         val rightPlayer = rightPlayer(activePlayer)
         if (activePlayer.currentScore < activePlayer.obligation) {
-            activePlayer.totalScore -= activePlayer.obligation
-            activePlayer.clearBarrel()
+            if (activePlayer.onBarrel) { activePlayer.barrelBolts++ }
+            else { activePlayer.totalScore -= activePlayer.obligation }
         } else {
             activePlayer.totalScore += activePlayer.obligation
         }

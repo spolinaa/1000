@@ -1,7 +1,7 @@
 /* Trick-taking game for three players "1000"
 by Sokolova Polina & Kuzmina Liza */
 
-package kotlin
+package console
 
 import java.util.*
 
@@ -71,9 +71,8 @@ internal object Game {
         HumanPlayer.isWinner()
         ComputerPlayer1.isWinner()
         ComputerPlayer2.isWinner()
-        println("|\n")
+        println("|")
     }
-
 
     private fun gameOnBounds() {
 
@@ -89,7 +88,7 @@ internal object Game {
         HumanPlayer.printScores(HumanPlayer.totalScore, true)
         ComputerPlayer1.printScores(ComputerPlayer1.totalScore, true)
         ComputerPlayer2.printScores(ComputerPlayer2.totalScore, true)
-        println("|\n")
+        println("|")
     }
 
     private fun simpleGame() {
@@ -112,8 +111,7 @@ internal object Game {
         if (talonChecking()) { return true }
         getTalon()
         activePlayer.giveCards(opponent1, opponent2)
-        print("Ваши карты: ")
-        printCards(HumanPlayer.handCards)
+        HumanPlayer.printHumanCards()
         println("\n")
         if (pointsDivision()) { firstHand = leftPlayer(firstHand); return true }
         activePlayer.finalObligation()
@@ -128,8 +126,7 @@ internal object Game {
             clearAll()
             shuffledCards = shuffle()
             cardsDeal(shuffledCards)
-            print("Ваши карты: ")
-            printCards(HumanPlayer.handCards)
+            HumanPlayer.printHumanCards()
             println("\n")
             res = playerCardChecking()
         }

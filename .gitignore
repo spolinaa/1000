@@ -1,3 +1,9 @@
-gen
+*.class
+*.jar
+*.iml
+.idea
+build
+.gradle
+!gradle-wrapper.jargen
 .idea
 out

@@ -1,7 +1,7 @@
 /* Trick-taking game for three players "1000"
 by Sokolova Polina & Kuzmina Liza */
 
-package kotlin
+package console
 
 import java.util.*
 
@@ -43,7 +43,7 @@ public class Computer() : Player() {
         if (size > 2) {
             var resCard1 = array[0]
             var resCard2 = array[1]
-            for (i in 0..size - 2) {
+            for (i in 2..size - 1) {
                 val index = handCards.indexOf(array[i])
                 if (resCard1.rank > array[i].rank) { resArray[0] = index }
                 else if (resCard2.rank > array[i].rank) { resArray[1] = index }
@@ -141,10 +141,10 @@ public class Computer() : Player() {
                 val high = Card(suit, nextRank)
                 val num  = suitIndex(suit)
                 val inGood = high.containsIn(goodCards)
-                val notInOther = !high.containsIn(otherCards1[num])
+                var sumInOther = 0
+                for (j in otherCards1[num]) { sumInOther += j.rank }
                 val notInHand = !high.containsIn(handCards)
-
-                if (inGood || (notInOther && notInHand)) {
+                if (inGood || (sumInOther == 0 && notInHand)) {
                     goodCards.add(i)
                     sumRank += rank + additionalScore
                     val size = otherCards1[num].size
@@ -164,16 +164,16 @@ public class Computer() : Player() {
             sumRank += sum
         }
         else { Game.sortBySuits(goodCards) }
-        if (goodCards.size > 5) { return smartAnalysis(notInGoodCards, sumRank) }
+        if (goodCards.size > 5) { return smartAnalysis(notInGoodCards) }
         return sumRank
     }
 
-    private fun smartAnalysis(array : ArrayList<Card>, sum : Int) : Int {
+
+    private fun smartAnalysis(array : ArrayList<Card>) : Int {
         var r1 : Card? = null
         var r2 : Card? = null
         var suit = ' '
         var notInGoodCards = array
-        var sumRank = sum
         for (i in notInGoodCards) {
             if (i.rank == 4) { r1 = i; suit = i.suit }
             if (i.rank == 3 && suit == i.suit) { r2 = i }
@@ -186,7 +186,7 @@ public class Computer() : Player() {
             }
         }
         var sumToSub = 0
-        sumRank = sumWithMarriage()
+        var sumRank = sumWithMarriage()
         var A = 4
         var ten = 4
         var K = 4
@@ -216,8 +216,6 @@ public class Computer() : Player() {
         sumRank -= sumToSub
         return sumRank
     }
-
-
 
     private fun marriagesToUse(last : Int) : Boolean {
         val kingRank  = 4
@@ -317,16 +315,10 @@ public class Computer() : Player() {
         return card
     }
 
-    private fun removeKing(card : Card) {
-        if (card.rank == 3) {
-            for (i in kings) {
-                if (card.suit == i.suit) { kings = i.removeFrom(kings) }
-            }
-        }
-    }
-
     private fun removeCard(card : Card) : Card {
         handCards = card.removeFrom(handCards)
+        goodCards = card.removeFrom(goodCards)
+        kings = card.removeFrom(kings)
         return card
     }
 
@@ -392,7 +384,7 @@ public class Computer() : Player() {
         val cSuit = Game.activeSuit
         if (aSuit != cSuit && Game.trump != aSuit) {
             val bad = findBadCard()
-            if (bad.suit  != ' ') { removeKing(bad); return bad  }
+            if (bad.suit  != ' ') { return bad  }
             /* if (goodCards.size > 1) {
                  val good = findGoodCard()
                  return good
@@ -402,20 +394,15 @@ public class Computer() : Player() {
             val good = findGoodCard()
             if (good.suit != ' ') { return good }
             val bad = findBadCard()
-            if (bad.suit  != ' ') { removeKing(bad); return bad  }
+            if (bad.suit  != ' ') { return bad  }
         }
         if (availableSize > 1) {
             findLowCards(availableCards)
-            removeKing(handCards[secondCardNumber]);
-            return removeCard(handCards[secondCardNumber])
+            val card = handCards[secondCardNumber]
+            return removeCard(card)
         }
-        else {
-            removeKing(availableCards[0]);
-            return removeCard(availableCards[0])
-        }
+        else { return removeCard(availableCards[0]) }
     }
-
-
 
     private fun inaccessibleCardsAnalysis() {
         var pointArray = Array(4, { 0 })

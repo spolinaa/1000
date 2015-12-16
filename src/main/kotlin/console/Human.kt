@@ -1,7 +1,7 @@
 /* Trick-taking game for three players "1000"
 by Sokolova Polina & Kuzmina Liza */
 
-package kotlin
+package console
 
 import java.util.*
 
@@ -19,12 +19,25 @@ public class Human() : Player() {
         return card
     }
 
-    override internal fun passiveClick() : Card = click(availableCards())
+    override internal fun passiveClick() : Card {
+        println()
+        return click(availableCards())
+    }
+
+    private fun printNumbers(cards : ArrayList<Card>, indent : Int) {
+        print("\n")
+        for (i in 0..indent) { print(" ") }
+        for (i in 0..cards.size - 1) {
+            if (cards[i].rank == 10) { print(" ") }
+            print("$i    ")
+        }
+        println("\n")
+    }
 
     private fun click(cards : ArrayList<Card>) : Card {
-        print("\n\n                                   Доступные для хода карты: ")
+        print("\nДоступные для хода карты: ")
         Game.printCards(cards)
-        println("\n")
+        printNumbers(cards, 27)
         println("Ваш ход: ")
         val args = getArgs(cards.size - 1)
         val card = cards[args]
@@ -66,20 +79,27 @@ public class Human() : Player() {
         return false
     }
 
+    internal fun printHumanCards() {
+        print("Ваши карты: ")
+        Game.printCards(Game.HumanPlayer.handCards)
+    }
+
     override internal fun finalObligation() {
         println("Выберите ставку")
-        val s = readLine()?.toInt() ?: 0
-        println()
-        val maxSum = sumWithMarriage()
-        if (s >= obligation) { obligation = s }
-        if (s > maxSum) { obligation = maxSum }
+        val bid = readLine() ?: ""
+        if (bid.length > 0) {
+            val s = bid.toInt()
+            println()
+            val maxSum = sumWithMarriage()
+            if (s >= obligation) { obligation = s }
+            if (s > maxSum) { obligation = maxSum }
+        }
         println("Ставка: $obligation\n")
     }
 
     override protected fun chooseCardsToGive() {
-        print("Ваши карты: ")
-        Game.printCards(handCards)
-        println("\n")
+        printHumanCards()
+        printNumbers(handCards, 13)
         println("Выберите две карты для сноса")
         firstCardNumber  = getArgs(handCards.size - 1)
         secondCardNumber = getArgs(handCards.size - 1)

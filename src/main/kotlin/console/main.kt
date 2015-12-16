@@ -4,7 +4,7 @@ by Sokolova Polina & Kuzmina Liza */
 package console
 
 fun main(args : Array<String>) {
-    Game.ComputerPlayer1.name = "Computer Lisa"
+    /*Game.ComputerPlayer1.name = "Computer Lisa"
     Game.ComputerPlayer2.name = "Computer Polina"
     Game.HumanPlayer.name = "Player"
     Game.ComputerPlayer1.totalScore = 0
@@ -25,6 +25,6 @@ fun main(args : Array<String>) {
     for (i in 1..8) {
         Game.comparison()
     }
-    Game.conclusion()
-    //Game.startGame()
+    Game.conclusion() */
+    Game.startGame()
 }

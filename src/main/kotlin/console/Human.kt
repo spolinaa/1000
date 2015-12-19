@@ -39,7 +39,7 @@ public class Human() : Player() {
         Game.printCards(cards)
         printNumbers(cards, 27)
         println("Ваш ход: ")
-        val args = getArgs(cards.size - 1)
+        val args = getArgs(cards.size - 1, 1)[0]
         val card = cards[args]
         handCards.remove(card)
         println()
@@ -101,15 +101,49 @@ public class Human() : Player() {
         printHumanCards()
         printNumbers(handCards, 13)
         println("Выберите две карты для сноса")
-        firstCardNumber  = getArgs(handCards.size - 1)
-        secondCardNumber = getArgs(handCards.size - 1)
+        val toGive = getArgs(handCards.size - 1, 2)
+        firstCardNumber  = toGive[0]
+        secondCardNumber = toGive[1]
     }
 
-    internal fun getArgs(range : Int) : Int {
-        var args : Int = readLine()?.toInt() ?: getArgs(range)
-        if (args > range || args < 0) {
-            args = getArgs(range)
+    internal fun getArgs(range : Int, numberOfCards : Int) : ArrayList<Int> {
+        var result : ArrayList<Int> = arrayListOf()
+        while (result.size < numberOfCards) {
+            val line = readLine()
+            var i = 0
+            var waitingForSpace = false
+            if (line != null) {
+                while (i < line.length) {
+                    if (i != line.length - 1) {
+                        if (line[i + 1] == ' ') {
+                            if (waitingForSpace) {
+                                waitingForSpace = false
+                            }
+                            else {
+                                val value = line[i].toInt() - 48
+                                if (value <= range && value >= 0 && result.size < numberOfCards) {
+                                    result.add(value)
+                                }
+                            }
+                            i += 2
+                        }
+                        else {
+                            waitingForSpace = true
+                            i++
+                        }
+                    }
+                    else {
+                        if (!waitingForSpace) {
+                            val value = line[i].toInt() - 48
+                            if (value <= range && value >= 0 && result.size < numberOfCards) {
+                                result.add(value)
+                            }
+                        }
+                        i++
+                    }
+                }
+            }
         }
-        return args
+        return result
     }
 }
